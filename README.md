@@ -1,6 +1,6 @@
 # PICART — Physics-Informed Regression Trees
 
-A research assistantship project with Nathan Wycoff (UMass Amherst) on teaching
+My first PhD research project, with Dr. Nathan Wycoff (UMass Amherst), on teaching
 **decision trees** to respect the **laws of physics**.
 
 ## The idea in plain words
