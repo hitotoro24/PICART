@@ -3,7 +3,7 @@
 Only a one-dimensional depth-one tree is implemented. This is deliberately NOT a
 complete recursive PICART or an exact reproduction of the proposal's Figure 2.
 
-Run: python picart_experiment.py --seed 17 --n 120 --sigma 1.5
+Run (from repo root): python prototypes/first_order_stump/picart_experiment.py --seed 17 --n 120 --sigma 1.5
 """
 
 from __future__ import annotations
@@ -126,7 +126,8 @@ def run_experiment(args: argparse.Namespace) -> Path:
         model["physics_residual_abs"] = abs(model["physics_residual"])
         model["prediction_shift_left"] = model["mu_left"] - model["mean_left"]
         model["prediction_shift_right"] = model["mu_right"] - model["mean_right"]
-    out = Path("experiments")
+    out = Path(__file__).resolve().parent / "experiments"
+    repo_root = Path(__file__).resolve().parents[2]
     out.mkdir(parents=True, exist_ok=True)
     fig, ax = plt.subplots(figsize=(8, 5))
     ax.scatter(x, y, s=12, alpha=0.45, label="Noisy observations")
@@ -175,7 +176,7 @@ def run_experiment(args: argparse.Namespace) -> Path:
         "cart_threshold": cart_tau,
         "picart_runs": models,
         "fixed_split_sweep": fixed,
-        "figures": ["experiments/fit.png", "experiments/lambda_sweep.png"],
+        "figures": [str((out / name).relative_to(repo_root)) for name in ("fit.png", "lambda_sweep.png")],
         "interpretation": "PENDING: write your observations before pushing results",
         "next_step": "PENDING: choose the next hypothesis or code change",
         "note": "Illustrative test only; not a verified replication of proposal Figure 2.",

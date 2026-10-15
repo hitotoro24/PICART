@@ -1,7 +1,8 @@
 """GitHub Actions push event -> Notion experiment log child page.
 
 Requires NOTION_TOKEN and NOTION_PARENT_PAGE_ID secrets. No polling.
-Experiment results/images are included ONLY when experiments/latest.json changed
+Experiment results/images are included ONLY when a results file named latest.json
+(anywhere in the repo, e.g. prototypes/first_order_stump/experiments/latest.json) changed
 in that push, preventing reuse of stale numbers on code-only commits.
 
 This intentionally creates subpages under a Notion *page*, not database rows:
@@ -77,8 +78,9 @@ def upload_image(path: Path, token: str) -> dict:
 def construct_record(sha: str, repo: str, message: str, changed: list[str]) -> tuple[str, list[dict], dict | None]:
     short = sha[:7]
     url = f"https://github.com/{repo}/commit/{sha}"
-    fresh_results = "experiments/latest.json" in changed
-    experiment = json.loads(Path("experiments/latest.json").read_text(encoding="utf-8")) if fresh_results else None
+    results_path = next((c for c in changed if Path(c).name == "latest.json"), None)
+    fresh_results = results_path is not None
+    experiment = json.loads(Path(results_path).read_text(encoding="utf-8")) if fresh_results else None
     kind = "Experiment" if fresh_results else "Code change"
     title = f"PICART | {short} | {kind}"
     blocks = [
