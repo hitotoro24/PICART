@@ -24,4 +24,9 @@ jobs:
         env:
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           NOTION_PARENT_PAGE_ID: ${{ secrets.NOTION_PARENT_PAGE_ID }}
-        run: python tools/notion_push_log.py
+        run: |
+          if [ -z "$NOTION_TOKEN" ] || [ -z "$NOTION_PARENT_PAGE_ID" ]; then
+            echo "Notion secrets not configured; skipping log."
+            exit 0
+          fi
+          python tools/notion_push_log.py
