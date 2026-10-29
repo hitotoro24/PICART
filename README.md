@@ -30,13 +30,13 @@ between its two child boxes. With that estimate, the physics rule can be added
 to the cost the tree minimises when choosing each split. The resulting method is
 called **PICART** (Physics-Informed CART).
 
-## The question we are working on now
+## What I'm working on now
 
-The proposal gives closed-form formulas for how a PICART tree should choose its
-values when the physics rule involves only first derivatives (a *first-order*
-equation). These formulas were worked out for simple cases. **Current goal:
-understand why the conditions stated in the proposal are not enough for a
-general first-order equation**, and what extra conditions or changes are needed.
+Still have questions about the first-order PICART formulas. Right now I'm also
+trying to get second derivatives from the first-derivative estimates in
+*Regression Trees Know Calculus*. The current tests are on quadratics, first
+with exact regional means and then with a fitted CART. Haven't worked out the
+general smooth-function case or added a physics penalty yet.
 
 ## Progress log
 
@@ -44,6 +44,8 @@ Newest first. Each entry links to where the details live.
 
 | Week | What happened | Where |
 |---|---|---|
+| 2026-W44 (Oct 26–Nov 1) | Worked through effective locations for tree-based first derivative estimates, then used pairs of nodes to try to recover Hessians in 2D and D dimensions. Checked exact box means against an actual fitted CART. Still need a good pair selection rule and general C² theory. | [`weeks/2026-W44/`](weeks/2026-W44/) |
+| 2026-W43 (Oct 19–25) | Went through the four-grandchild 1D/2D stencils, unequal splits, mixed derivatives, and noise / curvature checks. | [`weeks/2026-W43/`](weeks/2026-W43/) |
 | 2026-W42 (Oct 12–18) | Repository set up. Every equation of the proposal transcribed with notes on notational inconsistencies. A small one-split prototype of first-order PICART built and tested. Three issues found in the proposal's first-order algorithm (see the prototype's progress notes). Began studying the general first-order case. | [`weeks/2026-W42/`](weeks/2026-W42/), [`prototypes/first_order_stump/PROGRESS.md`](prototypes/first_order_stump/PROGRESS.md) |
 
 ## How this repository is organised
