@@ -44,6 +44,7 @@ Newest first. Each entry links to where the details live.
 
 | Week | What happened | Where |
 |---|---|---|
+| 2026-W45 (Nov 2–8) | Controlled finite-difference test of the Hessian on regional means of a 3D quadratic, then an sklearn CART on the same data: the aligned equal-cell stencils are exact but CART never produces that configuration; the W44 effective-centre solve on the CART partition recovers all six entries exactly with exact box means, leaving only sampling error. 26 tests. | [`weeks/2026-W45/`](weeks/2026-W45/) |
 | 2026-W44 (Oct 26–Nov 1) | Worked through effective locations for tree-based first derivative estimates, then used pairs of nodes to try to recover Hessians in 2D and D dimensions. Checked exact box means against an actual fitted CART. Still need a good pair selection rule and general C² theory. | [`weeks/2026-W44/`](weeks/2026-W44/) |
 | 2026-W43 (Oct 19–25) | Went through the four-grandchild 1D/2D stencils, unequal splits, mixed derivatives, and noise / curvature checks. | [`weeks/2026-W43/`](weeks/2026-W43/) |
 | 2026-W42 (Oct 12–18) | Repository set up. Every equation of the proposal transcribed with notes on notational inconsistencies. A small one-split prototype of first-order PICART built and tested. Three issues found in the proposal's first-order algorithm (see the prototype's progress notes). Began studying the general first-order case. | [`weeks/2026-W42/`](weeks/2026-W42/), [`prototypes/first_order_stump/PROGRESS.md`](prototypes/first_order_stump/PROGRESS.md) |
@@ -68,6 +69,7 @@ PICART/
 python -m pip install -r requirements.txt
 python -m unittest discover -s tests -v
 python -m unittest discover -s prototypes/first_order_stump/tests -v
+cd weeks/2026-W45 && python -m pytest -q tree_hessian/tests
 ```
 
 Each week's notebook opens in Jupyter. Each prototype explains how to run it in
