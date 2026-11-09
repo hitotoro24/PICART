@@ -40,15 +40,62 @@ the file is not modified and the full 2 GB dataset is not used.
    **A** `max_depth=7, min_samples_leaf=1` (sklearn default leaf size) and **B** `max_depth=7, min_samples_leaf=50`.
 2. From each internal node take the two child-node response means and form the first-derivative estimate
    γ = 2(μ_right − μ_left)/(hi_s − lo_s) along the split axis s.
-3. Reconstruct the Hessian with the existing effective-centre method (Week 45 `tree_hessian.uneven`): the
-   gradient estimate of a node splitting axis s is located at c_s = (lo_s + τ + hi_s)/3 and c_p = (lo_p + hi_p)/2
-   for p ≠ s; every pair of nodes splitting the same axis gives one row γ_b − γ_a = (c_b − c_a)ᵀ H e_s; row s of H is
-   the least-squares solution. Rows are solved independently and the **raw matrix is reported as is**.
+3. Reconstruct the Hessian with **Algorithm 1 of the manuscript, implemented line by line** (`hessian_tools.
+   algorithm1_hessian`): for every internal node compute γ by eq. (3) and the effective location z by eq. (4),
+   z_s = (lo_s + τ + hi_s)/3 and z_p = (lo_p + hi_p)/2 for p ≠ s; for every ordered pair of distinct nodes with the
+   same split axis and z_A ≠ z_B append (z_B − z_A)ᵀ to V_s and γ_B − γ_A to y_s; for each s check rank(V_s) = d
+   (else "not identified") and solve by least squares for row s of Q̃; return Q̂ = (Q̃ + Q̃ᵀ)/2. The matrix **before**
+   line 19, Q̃, is reported first because its off-diagonal pairs are two independent estimates of one quantity.
 4. Implement residual-based PHD independently (conventions stated in §5).
 5. Print both matrices, check the raw CART matrix for symmetry pair by pair, then compare with PHD.
 6. Controlled check: apply the same reconstruction, on the same fitted partition, to a quadratic with a known
    Hessian, to attribute any inconsistency to code, geometry, cell size, or the within-cell distribution of the
    real predictors.""")
+
+    axes = "two inputs (Load 1, Load 2)" if d == 2 else "three inputs (Load 1, Load 2, Load 3)"
+    unknowns = ("three numbers: how cost curves along Load 1 (Q₁₁), along Load 2 (Q₂₂), and their interaction (Q₁₂)"
+                if d == 2 else
+                "six numbers: the three curvatures Q₁₁, Q₂₂, Q₃₃ and the three interactions Q₁₂, Q₁₃, Q₂₃")
+    eq = ("γ_B − γ_A = Q₁₁·(z_B,1 − z_A,1) + Q₁₂·(z_B,2 − z_A,2)" if d == 2 else
+          "γ_B − γ_A = Q₁₁·(z_B,1 − z_A,1) + Q₁₂·(z_B,2 − z_A,2) + Q₁₃·(z_B,3 − z_A,3)")
+    unk_row = "(Q₁₁, Q₁₂)" if d == 2 else "(Q₁₁, Q₁₂, Q₁₃)"
+    pairs_note = ("In 2D there is exactly one such pair to check, (1,2)." if d == 2 else
+                  "In 3D there are three such pairs to check: (1,2), (1,3), (2,3).")
+    md(f"""## The method in plain terms ({d}D)
+
+We have {axes} and one output, the cost. We want {unknowns}.
+
+**Step 1 — one slope per split.** Take an internal node that splits on Load 1: a box with a cut at τ, left-child mean
+cost μ_L, right-child mean cost μ_R. Then γ = (μ_R − μ_L) / ((hi₁ − lo₁)/2) is a slope of cost with respect to
+Load 1 — the two child boxes' centres are half the box width apart along Load 1, so this is "rise over run". A
+Load-2 split gives a slope with respect to Load 2 the same way{"" if d == 2 else ", and a Load-3 split with respect to Load 3"}.
+
+**Step 2 — where that slope is measured.** The slope is not "at the cut". For a quadratic cost it equals the derivative
+at one point in the box: along the split axis, (lo + τ + hi)/3, the average of the three breakpoints; along every other
+axis, the middle of the box. Call that point z. Each split now reads: *"the Load-s slope at location z is γ."*
+
+**Step 3 — two slopes make one equation.** Take two Load-1 splits, A and B. If the cost is quadratic, the Load-1 slope
+changes linearly as you move, so
+
+    {eq}
+
+Read it as: the slope changed because we moved along Load 1 (curvature Q₁₁ acts) and along the other axes
+(interactions act). Two special cases: if A and B sit at the same height in the other axes, only Q₁₁ remains — "the
+slope changed as I moved along Load 1"; if they sit at the same Load-1 position but different heights, only the
+interaction terms remain — "the Load-1 slope changed as I moved in Load 2": that *is* an interaction.
+
+**Step 4 — many equations, solve.** Every pair of Load-1 splits gives one equation in {unk_row}. Stack them and solve
+by least squares → row 1 of the Hessian. Repeat with Load-2 splits for row 2{"" if d == 2 else " and Load-3 splits for row 3"}.
+The pairs must spread in every direction, otherwise the equations cannot separate the unknowns — that is the rank check.
+
+**Step 5 — the symmetry check.** Row 1 gives Q₁₂ from Load-1 splits; row 2 gives Q₂₁ from Load-2 splits. A true Hessian
+has Q₁₂ = Q₂₁, and the two were computed from completely different splits, so their gap measures the method's error
+without needing any truth. Algorithm 1's last line averages them; this notebook looks at them *before* averaging.
+{pairs_note}
+
+**Why this can fail on real data.** Step 2 assumes rows fill each box evenly — that is where the /3 and the box-middle
+come from. If they do not, z is mislocated and the Step-3 equations are built on the wrong coordinates. And each μ is
+an average over the rows in a child, so it is noisy; the method differences these averages twice.""")
 
     code("""import warnings; warnings.filterwarnings("ignore")
 import numpy as np, pandas as pd, matplotlib.pyplot as plt
@@ -83,22 +130,26 @@ for k, kw in settings.items():
 print("\\nsetting B, first rows of the split table:")
 display(splits["B"].head(12))""")
 
-    md(f"""## 3. Raw CART Hessian (existing method, rows solved independently)
+    md(f"""## 3. Algorithm 1: Q̃ before symmetrisation (line 19 not yet applied)
 
-Rank diagnostics per row: number of nodes splitting that axis, number of pairs, rank of the stacked displacement
-matrix (must equal {d}), and its condition number. A row with rank < {d} is left as NaN, never filled.
+Rank diagnostics per row s: number of nodes splitting axis s, number of rows in V_s (ordered pairs, so twice the
+number of unordered pairs), rank of V_s (must equal {d}, else Algorithm 1 returns "not identified"), and its
+condition number.
 
-The pairwise system of the Week 45 solver is also compared numerically with an equivalent formulation (regress γ on
-the effective centres after centring, one regression per axis) to confirm the two agree.""")
-    code("""H_raw, diag = {}, {}
+Two cross-checks confirm the implementation: the Week 45 solver (unordered pairs, same equations) and the
+centred-regression formulation used in cedar_baseline must both reproduce Q̃ to rounding.""")
+    code("""H_raw, H_hat, diag = {}, {}, {}
 for k in settings:
-    H_raw[k], diag[k] = L.cart_hessian_raw(nodes[k], D)
+    res = L.algorithm1_hessian(nodes[k], D)
+    H_raw[k], H_hat[k], diag[k] = res["Q_tilde"], res["Q_hat"], res["diag"]
+    w45, _ = L.cart_hessian_raw(nodes[k], D)
     alt = L.centred_regression_rows(nodes[k], D)
-    print(f"--- setting {k} ---")
+    print(f"--- setting {k}: identified = {res['identified']} ---")
     display(diag[k])
-    print("raw CART matrix (NOT symmetrised):")
-    display(L.matrix_frame(H_raw[k], f"CART raw {k}"))
-    print(f"max |pairwise solve - centred regression| = {np.nanmax(np.abs(H_raw[k]-alt)):.2e}\\n")""")
+    print("Q_tilde (Algorithm 1 before line 19, NOT symmetrised):")
+    display(L.matrix_frame(H_raw[k], f"Q_tilde {k}"))
+    print(f"max |Algorithm 1 - Week 45 solver| = {np.nanmax(np.abs(H_raw[k]-w45)):.2e} | "
+          f"max |Algorithm 1 - centred regression| = {np.nanmax(np.abs(H_raw[k]-alt)):.2e}\\n")""")
 
     md("""## 4. Independent residual-based PHD
 
@@ -110,12 +161,13 @@ reported asymmetry of H_PHD is at rounding level and is shown only for completen
 print(f"condition number of Sigma: {cond_sigma:.2f} | Frobenius asymmetry of H_PHD: {asym_phd:.1e}")
 display(L.matrix_frame(H_phd, "PHD"))""")
 
-    md("## 5. Both estimates side by side (raw values, original units)")
+    md("## 5. Both estimates side by side (original units)")
     code("""for k in settings:
-    print(f"CART raw, setting {k}:"); display(L.matrix_frame(H_raw[k], f"CART raw {k}"))
+    print(f"Algorithm 1 Q_tilde (before line 19), setting {k}:"); display(L.matrix_frame(H_raw[k], f"Q_tilde {k}"))
+    print(f"Algorithm 1 Q_hat (line 19 output), setting {k}:"); display(L.matrix_frame(H_hat[k], f"Q_hat {k}"))
 print("PHD:"); display(L.matrix_frame(H_phd, "PHD"))""")
 
-    md(f"""## 6. Symmetry of the raw CART matrix
+    md(f"""## 6. Symmetry of Q̃ (what line 19 averages away)
 
 A {d}×{d} matrix has {n_pairs} distinct off-diagonal pair{'s' if n_pairs > 1 else ''}
 ({', '.join(f'({i+1},{j+1})' for i in range(d) for j in range(i+1, d))}). For each pair the table shows H[i,j]
@@ -128,23 +180,23 @@ Nothing is symmetrised in this section.""")
 
     md("""## 7. Comparison with PHD
 
-First the raw CART matrices against PHD, entry by entry. Then, labelled explicitly, the symmetrised CART matrix
-½(H + Hᵀ) against PHD — reported only after the raw discrepancies above, so that symmetrisation is a visible step and
-not a hidden one. Differences are between two estimates; no column is a truth value.""")
+First Q̃ against PHD, entry by entry. Then the Algorithm 1 output Q̂ = (Q̃ + Q̃ᵀ)/2 against PHD — reported only after
+the discrepancies above, so that line 19 is a visible step and not a hidden one. Differences are between two
+estimates; no column is a truth value.""")
     code("""for k in settings:
-    print(f"--- setting {k}: raw CART vs PHD ---")
-    display(L.comparison_table(H_raw[k], H_phd, f"CART raw {k}"))
-    H_sym, asym = L.symmetrize(H_raw[k])
-    print(f"--- setting {k}: symmetrised CART ½(H+Hᵀ) vs PHD   (CART asymmetry ||H-Hᵀ||/||H|| = {asym:.3f}) ---")
-    display(L.comparison_table(H_sym, H_phd, f"CART sym {k}"))""")
+    print(f"--- setting {k}: Q_tilde vs PHD ---")
+    display(L.comparison_table(H_raw[k], H_phd, f"Q_tilde {k}"))
+    asym = np.linalg.norm(H_raw[k] - H_raw[k].T) / np.linalg.norm(H_raw[k])
+    print(f"--- setting {k}: Q_hat (Algorithm 1 output) vs PHD   (asymmetry of Q_tilde ||Q-Qᵀ||/||Q|| = {asym:.3f}) ---")
+    display(L.comparison_table(H_hat[k], H_phd, f"Q_hat {k}"))""")
 
     md("### Heatmaps (entries in millions of original units)")
     code("""fig, axes = plt.subplots(2, 3, figsize=(13, 7.5))
 L.heatmap(H_phd, "PHD", axes[0, 0])
-L.heatmap(H_raw["A"], "CART raw, setting A", axes[0, 1])
+L.heatmap(H_raw["A"], "Q̃ (Algorithm 1 before line 19), setting A", axes[0, 1])
 L.heatmap(np.abs(H_raw["A"] - H_raw["A"].T), "|H − Hᵀ|, setting A", axes[0, 2], absolute=True)
-L.heatmap(np.abs(H_raw["A"] - H_phd), "|CART raw A − PHD|", axes[1, 0], absolute=True)
-L.heatmap(H_raw["B"], "CART raw, setting B", axes[1, 1])
+L.heatmap(np.abs(H_hat["A"] - H_phd), "|Q̂ A − PHD|", axes[1, 0], absolute=True)
+L.heatmap(H_raw["B"], "Q̃ (Algorithm 1 before line 19), setting B", axes[1, 1])
 L.heatmap(np.abs(H_raw["B"] - H_raw["B"].T), "|H − Hᵀ|, setting B", axes[1, 2], absolute=True)
 fig.tight_layout(); plt.show()""")
 
@@ -187,12 +239,14 @@ display(u.tail(6))""")
 
     md(f"""## 9. Findings
 
-1. **The implementation follows the derivation.** The row-wise pairwise solver and the centred-regression
-   formulation agree to rounding (§3), rank is full in every row, and with exact box means the known quadratic is
-   recovered to ~1e-14 on the fitted partitions (§8a). There is no coding defect in the reconstruction.
-2. **The raw CART Hessian is not symmetric on this data**, by amounts comparable to or larger than the entries
-   themselves (§6). Because row i and row j are estimated from disjoint sets of nodes, H[i,j] and H[j,i] are two
-   independent estimates of the same quantity; their gap is a direct, assumption-free measure of estimation error.
+1. **The implementation is Algorithm 1.** `algorithm1_hessian` follows the pseudocode line by line; the Week 45
+   solver and the centred-regression formulation reproduce its Q̃ to rounding (§3); rank is full in every row; and
+   with exact box means the known quadratic is recovered to ~1e-14 on the fitted partitions (§8a). There is no
+   coding defect in the reconstruction.
+2. **Q̃ is not symmetric on this data**, by amounts comparable to or larger than the entries themselves (§6).
+   Because row i and row j are estimated from disjoint sets of nodes, Q̃[i,j] and Q̃[j,i] are two independent
+   estimates of the same quantity; their gap is a direct, assumption-free measure of estimation error. Line 19 of
+   Algorithm 1 averages it away, so the published output Q̂ cannot show it; Q̃ must be inspected before line 19.
 3. **Source of the inconsistency.** §8 shows that replacing exact box means by sample means of a *noise-free* known
    quadratic already produces errors of order 1–10× the true entries. With the same number of points per cell drawn
    uniformly on each box (c) the error is of the same order, so the dominant cause at n = 5,000 is sample-mean
@@ -201,7 +255,7 @@ display(u.tail(6))""")
    rows within boxes adds a further error (§8, last table: centroid offsets of roughly 7–11 % of the box width on
    average, against the 0 assumed by the effective-centre formula); at setting A the two effects are not separable.
    Larger leaves (setting B) reduce the inconsistency but do not remove it.
-4. **Against PHD.** PHD gives a symmetric matrix with entries of order 10⁵–10⁶; the CART estimates disagree with it
+4. **Against PHD.** PHD gives a symmetric matrix with entries of order 10⁵–10⁶; the Algorithm 1 estimates disagree with it
    in magnitude and, for some entries, in sign (§7). Given (2)–(3), that disagreement cannot yet be attributed to
    either method's assumptions; it is within the CART estimate's own inconsistency.
 

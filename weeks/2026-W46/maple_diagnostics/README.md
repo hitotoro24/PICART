@@ -1,8 +1,24 @@
 # Week 46 — Maple diagnostic study: CART effective-centre Hessian vs. residual-based PHD, OPFData IEEE-118
 
-Independent Maple re-implementation and diagnostic evaluation of the 2D and 3D comparison. The CART reconstruction is **the
-existing Week 45 method**, imported unchanged from `weeks/2026-W45/tree_hessian`; PHD is implemented here from
-scratch. Nothing in Week 45, cedar_baseline, the CSV, or any manuscript file is modified.
+Independent Maple re-implementation and diagnostic evaluation of the 2D and 3D comparison. The CART reconstruction
+is **Algorithm 1 of the manuscript, implemented line by line** in `hessian_tools.algorithm1_hessian`; its per-node
+quantities (eq. 3 gradient, eq. 4 effective location) come from the Week 45 package, which is imported unchanged.
+PHD is implemented here from scratch. Nothing in Week 45, cedar_baseline, the CSV, or any manuscript file is
+modified.
+
+### Algorithm 1 as implemented
+
+| pseudocode line | code |
+|---|---|
+| 1–4: for each internal node read s, τ, ℓ, u, μ_L, μ_R; compute γ by (3), z by (4) | `node_gradient`, `effective_center` (Week 45) |
+| 5: empty V_s, y_s | dict of lists per axis |
+| 6–11: for each pair of distinct nodes (A, B) with s_A = s_B and z_A ≠ z_B, append (z_B − z_A)ᵀ to V_s and γ_B − γ_A to y_s | double loop over ordered pairs, equality test on z |
+| 12–18: if rank(V_s) < d → "not identified"; else least squares → row s of Q̃ | `np.linalg.matrix_rank`, `np.linalg.lstsq`; returns `identified=False` and `Q_hat=None` |
+| 19: return Q̂ = (Q̃ + Q̃ᵀ)/2 | `Q_hat` |
+
+Q̃ (the matrix before line 19) is also returned and is what the symmetry tables inspect, because Q̂ by construction
+cannot show the inconsistency. Numerically, Algorithm 1 reproduces the Week 45 solver (unordered pairs) and the
+Cedar centred regression to ~1e-9 in both 2D and 3D, so all three are the same least-squares problem.
 
 ## Files
 
@@ -10,7 +26,7 @@ scratch. Nothing in Week 45, cedar_baseline, the CSV, or any manuscript file is 
 |---|---|
 | `maple_opfdata_hessian_2d.ipynb` | 2D study (CSV columns 1–2), executed with outputs |
 | `maple_opfdata_hessian_3d.ipynb` | 3D study (CSV columns 1–3), executed with outputs |
-| `hessian_tools.py` | all functions used by the notebooks; every function has a docstring (purpose, inputs, outputs) |
+| `hessian_tools.py` | all functions used by the notebooks, including `algorithm1_hessian`; every function has a docstring (purpose, inputs, outputs) |
 | `make_notebooks.py` | regenerates and executes both notebooks (`python make_notebooks.py` from this directory) |
 
 Run a notebook from this directory; it needs `numpy pandas scikit-learn matplotlib`. The CSV is read from
@@ -28,7 +44,7 @@ identities per column are not established.
 
 | | Cedar baseline | Maple diagnostics |
 |---|---|---|
-| CART reconstruction | re-implemented inline (`cart_hessian`, centred regression per axis) | Week 45 `tree_hessian.uneven` imported and called directly (pairwise system, row-wise lstsq); the two formulations are checked numerically and agree to ~1e-9 |
+| CART reconstruction | re-implemented inline (`cart_hessian`, centred regression per axis) | Algorithm 1 implemented line by line (`algorithm1_hessian`); checked against the Week 45 solver and the Cedar centred regression, all agree to ~1e-9 |
 | tree settings | `max_depth=7`, default `min_samples_leaf=1` only | setting **A** (same as cedar_baseline, for comparability) and setting **B** `min_samples_leaf=50`, side by side |
 | first-derivative step | computed inside `cart_hessian` | tabulated per node: extent, τ, child means, γ, effective centre |
 | PHD | Σ⁻¹MΣ⁻¹ then symmetrised | same estimator, conventions stated (1/n covariance, OLS residual on intercept + linear terms), returned unsymmetrised with its rounding asymmetry reported (~1e-16) |
@@ -39,7 +55,7 @@ identities per column are not established.
 
 ## Results on the 5,000-row subset
 
-All numbers in original units (cost per predictor-unit²). Setting A reproduces cedar_baseline exactly.
+All numbers are entries of Q̃ in original units (cost per predictor-unit²). Setting A reproduces cedar_baseline exactly.
 
 **2D** (one distinct off-diagonal pair)
 

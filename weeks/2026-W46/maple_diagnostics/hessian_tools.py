@@ -130,12 +130,71 @@ def split_table(nodes: dict) -> pd.DataFrame:
     return pd.DataFrame(rows).sort_values(["split axis", "depth", "node"]).reset_index(drop=True)
 
 
-def cart_hessian_raw(nodes: dict, d: int):
-    """Row-wise reconstruction with the Week 45 solver.
+def algorithm1_hessian(nodes: dict, d: int):
+    """Algorithm 1 of the manuscript, implemented line by line.
 
-    Inputs: node dict, dimension d.  Outputs: raw (unsymmetrised) d x d matrix
-    with NaN rows where rank < d, and a diagnostics table (nodes, pairs, rank,
-    condition number) per row.  Row i uses only nodes that split axis i.
+        Require: tree nodes and their bounds; dimension d.
+        Ensure:  Q_hat, or "not identified".
+         1-4   for each internal node A: read s_A, tau_A, l_A, u_A, mu_L, mu_R;
+               compute gamma_A by eq. (3) and z_A by eq. (4)
+         5     initialise empty V_s, y_s for s = 1..d
+         6-11  for each pair of DISTINCT internal nodes (A, B):
+                 if s_A = s_B and z_A != z_B:
+                     s <- s_A; append (z_B - z_A)^T to V_s; append gamma_B - gamma_A to y_s
+        12-18  for s = 1..d: if rank(V_s) < d return "not identified";
+               solve V_s q_s ~ y_s by least squares; store q_s^T as row s of Q_tilde
+        19     return Q_hat = (Q_tilde + Q_tilde^T) / 2
+
+    Inputs: node dict from `nodes_from_cart`, dimension d.
+    Outputs: a dict with
+        "Q_hat"      the symmetrised estimate (line 19), or None if not identified;
+        "Q_tilde"    the row-wise matrix before line 19 (kept for the symmetry check;
+                     Algorithm 1 itself does not output it);
+        "identified" bool;
+        "diag"       per-row table: nodes splitting s, rows in V_s, rank, condition number.
+    Pairs are ORDERED as in the pseudocode (A, B) and (B, A) both appended; this
+    doubles each row with its sign flipped and leaves the least-squares solution
+    unchanged.  gamma and z come from the Week 45 functions so that eqs. (3)-(4)
+    are the published ones.
+    """
+    internal = [n for n in nodes.values() if not n.is_leaf]
+    gamma = {n.id: node_gradient(nodes, n) for n in internal}          # lines 1-4, eq. (3)
+    z = {n.id: effective_center(n) for n in internal}                  # lines 1-4, eq. (4)
+    V = {s: [] for s in range(d)}                                      # line 5
+    y = {s: [] for s in range(d)}
+    for A in internal:                                                 # lines 6-11
+        for B in internal:
+            if A.id == B.id:
+                continue
+            if A.feature == B.feature and not np.array_equal(z[A.id], z[B.id]):
+                s = A.feature
+                V[s].append(z[B.id] - z[A.id])
+                y[s].append(gamma[B.id] - gamma[A.id])
+    Q_tilde = np.full((d, d), np.nan)
+    diag_rows, identified = [], True
+    for s in range(d):                                                 # lines 12-18
+        Vs, ys = np.array(V[s]).reshape(-1, d), np.array(y[s])
+        n_nodes = sum(1 for n in internal if n.feature == s)
+        rank = np.linalg.matrix_rank(Vs) if len(Vs) else 0
+        cond = np.linalg.cond(Vs) if rank == d else np.inf
+        diag_rows.append({"row": f"Load {s+1}", "n_nodes": n_nodes, "n_rows_V": len(Vs),
+                          "rank": int(rank), "cond": cond})
+        if rank < d:                                                   # lines 13-14
+            identified = False
+            continue
+        Q_tilde[s] = np.linalg.lstsq(Vs, ys, rcond=None)[0]           # lines 16-17
+    Q_hat = (Q_tilde + Q_tilde.T) / 2 if identified else None          # line 19
+    return {"Q_hat": Q_hat, "Q_tilde": Q_tilde, "identified": identified,
+            "diag": pd.DataFrame(diag_rows)}
+
+
+def cart_hessian_raw(nodes: dict, d: int):
+    """Row-wise reconstruction with the Week 45 solver (unordered pairs, NaN
+    rows instead of a global "not identified").  Kept only to verify that the
+    Algorithm 1 implementation above reproduces it numerically.
+
+    Inputs: node dict, dimension d.  Outputs: raw d x d matrix and a per-row
+    diagnostics table (nodes, pairs, rank, condition number).
     """
     Q_raw, info = hessian_from_tree(nodes, d)
     diag = pd.DataFrame([{"row": f"Load {s+1}", **info[s]} for s in range(d)])
@@ -147,8 +206,8 @@ def centred_regression_rows(nodes: dict, d: int) -> np.ndarray:
     centres after subtracting means, one regression per axis.
 
     Inputs: node dict, d.  Output: d x d raw matrix (NaN where rank < d).
-    Used only to check numerically that it agrees with the pairwise system of
-    the Week 45 solver; it is not the reported estimator.
+    Used only to check numerically that it agrees with Algorithm 1; it is not
+    the reported estimator.
     """
     out = np.full((d, d), np.nan)
     for s in range(d):
@@ -287,7 +346,8 @@ def known_quadratic_check(nodes: dict, X: np.ndarray, d: int, seed: int = 0):
         Comparing (b) with (c) separates the effect of where the real rows sit
         inside the box from the effect of having only a few rows per cell.
     Outputs: dict with Q_true, raw matrices for (a), (b), (c), and their rank
-    diagnostics.  The known Q is in the predictors' original units.
+    diagnostics (all via Algorithm 1; the row-wise Q_tilde is compared so that
+    asymmetry is visible).  The known Q is in the predictors' original units.
     """
     rng = np.random.default_rng(seed)
     A = rng.normal(size=(d, d))
@@ -306,13 +366,12 @@ def known_quadratic_check(nodes: dict, X: np.ndarray, d: int, seed: int = 0):
             unif[i].value = float(f(U).mean())
         else:
             unif[i].value = np.nan
-    Qa, ia = hessian_from_tree(exact, d)
-    Qb, ib = hessian_from_tree(sample, d)
-    Qc, ic = hessian_from_tree(unif, d)
-    return {"Q_true": Q, "exact_box_means": Qa, "sample_means": Qb, "uniform_resample": Qc,
-            "rank_exact": [int(ia[s]["rank"]) for s in range(d)],
-            "rank_sample": [int(ib[s]["rank"]) for s in range(d)],
-            "rank_uniform": [int(ic[s]["rank"]) for s in range(d)]}
+    ra, rb, rc = (algorithm1_hessian(nn, d) for nn in (exact, sample, unif))
+    return {"Q_true": Q,
+            "exact_box_means": ra["Q_tilde"], "sample_means": rb["Q_tilde"], "uniform_resample": rc["Q_tilde"],
+            "rank_exact": ra["diag"]["rank"].tolist(),
+            "rank_sample": rb["diag"]["rank"].tolist(),
+            "rank_uniform": rc["diag"]["rank"].tolist()}
 
 
 def within_cell_uniformity(nodes: dict, X: np.ndarray) -> pd.DataFrame:
