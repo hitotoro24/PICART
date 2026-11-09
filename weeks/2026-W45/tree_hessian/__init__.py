@@ -1,6 +1,6 @@
 """Tree-based second-derivative estimation for a 3D quadratic target.
 
-Notation follows docs/claude/*.tex and Wycoff (2024):
+Notation follows external derivation notes (hessian_derivation.tex) and Wycoff (2024):
     f(x) = c + b^T x + 1/2 x^T Q x,   Q = Q^T,   Hessian = Q.
 A box (cell) is C = prod_p [lo_p, hi_p]; mu_C is the mean of f over C.
 """

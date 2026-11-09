@@ -6,7 +6,7 @@ on regional means work at all, and does an ordinary CART tree ever produce the
 regions it needs?
 
 Provenance: the code, tests and experiment runs in this folder were implemented with
-Claude Code from a written brief (aligned, equally spaced regions, regional means;
+Maple from a written brief (aligned, equally spaced regions, regional means;
 stop at any unresolved mathematical choice). The derivations and the open questions
 are mine. Full findings: [`report_3d_hessian.md`](report_3d_hessian.md).
 

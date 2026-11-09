@@ -1,15 +1,15 @@
-# Week 46 — Claude diagnostic study: CART effective-centre Hessian vs. residual-based PHD, OPFData IEEE-118
+# Week 46 — Maple diagnostic study: CART effective-centre Hessian vs. residual-based PHD, OPFData IEEE-118
 
-Independent Claude Code re-implementation and diagnostic evaluation of the 2D and 3D comparison. The CART reconstruction is **the
+Independent Maple re-implementation and diagnostic evaluation of the 2D and 3D comparison. The CART reconstruction is **the
 existing Week 45 method**, imported unchanged from `weeks/2026-W45/tree_hessian`; PHD is implemented here from
-scratch. Nothing in Week 45, chatgpt_baseline, the CSV, or any manuscript file is modified.
+scratch. Nothing in Week 45, cedar_baseline, the CSV, or any manuscript file is modified.
 
 ## Files
 
 | file | purpose |
 |---|---|
-| `claude_opfdata_hessian_2d.ipynb` | 2D study (CSV columns 1–2), executed with outputs |
-| `claude_opfdata_hessian_3d.ipynb` | 3D study (CSV columns 1–3), executed with outputs |
+| `maple_opfdata_hessian_2d.ipynb` | 2D study (CSV columns 1–2), executed with outputs |
+| `maple_opfdata_hessian_3d.ipynb` | 3D study (CSV columns 1–3), executed with outputs |
 | `hessian_tools.py` | all functions used by the notebooks; every function has a docstring (purpose, inputs, outputs) |
 | `make_notebooks.py` | regenerates and executes both notebooks (`python make_notebooks.py` from this directory) |
 
@@ -24,12 +24,12 @@ labelled *Load k* for CSV column k. Columns 1–99 are consistent with per-unit 
 elements of the IEEE-118 case (column means sum to 42.40 p.u. = 4,240 MW; nominal case total 4,242 MW). Bus
 identities per column are not established.
 
-## What this study adds beyond the ChatGPT baseline
+## What this study adds beyond the Cedar baseline
 
-| | ChatGPT baseline | Claude diagnostics |
+| | Cedar baseline | Maple diagnostics |
 |---|---|---|
 | CART reconstruction | re-implemented inline (`cart_hessian`, centred regression per axis) | Week 45 `tree_hessian.uneven` imported and called directly (pairwise system, row-wise lstsq); the two formulations are checked numerically and agree to ~1e-9 |
-| tree settings | `max_depth=7`, default `min_samples_leaf=1` only | setting **A** (same as chatgpt_baseline, for comparability) and setting **B** `min_samples_leaf=50`, side by side |
+| tree settings | `max_depth=7`, default `min_samples_leaf=1` only | setting **A** (same as cedar_baseline, for comparability) and setting **B** `min_samples_leaf=50`, side by side |
 | first-derivative step | computed inside `cart_hessian` | tabulated per node: extent, τ, child means, γ, effective centre |
 | PHD | Σ⁻¹MΣ⁻¹ then symmetrised | same estimator, conventions stated (1/n covariance, OLS residual on intercept + linear terms), returned unsymmetrised with its rounding asymmetry reported (~1e-16) |
 | symmetry report | pairs, mean/median/max abs gap | same, plus gap relative to the larger entry; the 2D case is stated to have one pair and the 3D case three |
@@ -39,7 +39,7 @@ identities per column are not established.
 
 ## Results on the 5,000-row subset
 
-All numbers in original units (cost per predictor-unit²). Setting A reproduces chatgpt_baseline exactly.
+All numbers in original units (cost per predictor-unit²). Setting A reproduces cedar_baseline exactly.
 
 **2D** (one distinct off-diagonal pair)
 
@@ -76,7 +76,7 @@ Rank is full (d) in every row for both settings and both dimensions.
 
 ## Naming and provenance
 
-This folder is the **Claude diagnostic study**, not a numbered successor implying improved accuracy. Setting A reproduces the [ChatGPT baseline](../chatgpt_baseline/README.md); setting B changes the minimum leaf size. The controlled known-quadratic experiments are additional diagnostics, not OPF ground truth. Original directory naming is preserved in Git history.
+This folder is the **Maple diagnostic study**, not a numbered successor implying improved accuracy. Setting A reproduces the [Cedar baseline](../cedar_baseline/README.md); setting B changes the minimum leaf size. The controlled known-quadratic experiments are additional diagnostics, not OPF ground truth. Original directory naming is preserved in Git history.
 
 **Mathematical caution.** The effective location and regional-mean derivative identity follow from a quadratic with *uniform volume averages over its child rectangles*. Actual CART child-node mean responses average only the observations assigned to the children. If those observations are concentrated unevenly, the contrast can already fail to equal the derivative at the geometric effective location, before second derivatives are reconstructed. Nonuniformity alone does not identify which estimator correction is appropriate.
 

@@ -1,18 +1,18 @@
-# Archived planning brief for the Claude diagnostics study
+# Archived planning brief for the Maple diagnostics study
 
-This document preserves the planning brief prepared before the independent implementation was committed. At the time it was drafted the directories were numbered `attempt_01` and `attempt_02`; current names are `chatgpt_baseline` and `claude_diagnostics`. **It is historical context, not a current status report or description of the executed Claude results.** The independent Claude diagnostics has since been pushed; see [its own README](../claude_diagnostics/README.md) and notebooks for the actual implementation, comparisons, and findings. Statements below about work being "not yet executed" or awaiting review describe the status *when this brief was drafted*. No files inside `claude_diagnostics/` are changed by recording this brief.
+This document preserves the planning brief prepared before the independent implementation was committed. The study names in this archival copy have been aligned with the current repository layout. **It is historical context, not a current status report or description of the executed Maple results.** The independent Maple diagnostics has since been pushed; see [its own README](../maple_diagnostics/README.md) and notebooks for the actual implementation, comparisons, and findings. Statements below about work being "not yet executed" or awaiting review describe the status *when this brief was drafted*. No files inside `maple_diagnostics/` are changed by recording this brief.
 
 ---
 
-# Independent OPFData Hessian comparison: Claude diagnostics
+# Independent OPFData Hessian comparison: Maple diagnostics
 
 **Documentation and implementation brief | Not yet executed**
 
-This document specifies the expected structure of an independently implemented follow-up to Week 46 ChatGPT baseline. **No implementation, new results, or commit by Claude is claimed here.** The previous attempt remains unchanged.
+This document specifies the expected structure of an independently implemented follow-up to Week 46 Cedar baseline. **This pre-execution brief itself does not report new results or a commit.** The previous attempt remains unchanged.
 
 ## Research objective
 
-Independently reproduce a two-dimensional and three-dimensional comparison between a CART-derived Hessian estimator and residual-based Principal Hessian Directions (PHD), using the same observations and assumptions documented in ChatGPT baseline. Test whether implementation details explain any numerical differences. Preserve numerical failures instead of hiding them through symmetrization or undocumented tuning.
+Independently reproduce a two-dimensional and three-dimensional comparison between a CART-derived Hessian estimator and residual-based Principal Hessian Directions (PHD), using the same observations and assumptions documented in Cedar baseline. Test whether implementation details explain any numerical differences. Preserve numerical failures instead of hiding them through symmetrization or undocumented tuning.
 
 ## Inputs and comparison
 
@@ -21,19 +21,19 @@ Independently reproduce a two-dimensional and three-dimensional comparison betwe
 - 2D predictors: columns 1 and 2. 3D predictors: columns 1, 2 and 3.
 - Start with the same untransformed data and CART settings (`max_depth=7`, `random_state=0`). Treat modifications as distinct experiments with named hypotheses and retained prior outputs.
 - Existing method and test reference: `weeks/2026-W45/tree_hessian/uneven.py` and its associated tests.
-- ChatGPT baseline reference: `weeks/2026-W46/chatgpt_baseline/`.
+- Cedar baseline reference: `weeks/2026-W46/cedar_baseline/`.
 - Do not treat the PHD matrix as true Hessian; neither baseline is ground truth on this dataset.
 
 ## Deliverables
 
-1. A self-contained executed 2D notebook and 3D notebook in a new `claude_diagnostics` folder.
+1. A self-contained executed 2D notebook and 3D notebook in a new `maple_diagnostics` folder.
 2. A reader-facing `README.md` that can be understood before opening either notebook. Organize it into research question, dataset, both algorithms, execution, numerical findings, interpretation, limitations, and next diagnostic.
 3. For every implemented function, concise docstrings specifying **purpose**, **arguments**, and **returns**. Place a brief research-purpose Markdown introduction before substantive code sections. Avoid provenance stories or authorial claims in research narrative.
 4. Direct numerical display of PHD and **raw unsymmetrized** tree matrices. For each distinct pair `i<j`, show `H[i,j]`, `H[j,i]`, signed difference, and absolute difference. Compute mean, median and maximum absolute pair gaps; specify how many pairs contribute to each summary.
 5. Numerically annotated figures with readable axis labels and consistent scale where possible. Include a **representative actual CART split** showing the observations, left/right child regions, sample counts, child mean costs, split threshold, and first-order contrast. Use an appropriate 2D slice/projection for 3D. Do not depict illustrative or invented data as real observations.
 6. When using *ranges of repeated estimates* for PHD and CART, first define the repetition protocol (e.g. independently repeated subsamples with fixed sizes and recorded random seeds). Explain what variation is summarized. Do not present those ranges as confidence intervals without a statistical argument.
 7. Independent verification of the PHD formula and covariance scaling, plus a check that the tree-row algebra reproduces the existing reference implementation on a controlled quadratic input before attributing a discrepancy to data or theory.
-8. A short comparison with ChatGPT baseline: what was reproduced, what changed, whether the raw symmetry and PHD disagreement improved, and what remains unidentified.
+8. A short comparison with Cedar baseline: what was reproduced, what changed, whether the raw symmetry and PHD disagreement improved, and what remains unidentified.
 
 ## Required scientific cautions
 
@@ -52,16 +52,16 @@ Independently reproduce a two-dimensional and three-dimensional comparison betwe
 
 **Phase C: interpret.** Explain whether both estimates are numerically stable enough to interpret, whether the observed raw CART asymmetry persists, and what controlled test would isolate its cause. Avoid claiming an improvement solely because a symmetric matrix was produced.
 
-**Phase D: review before upload.** Present the complete files, the diff against ChatGPT baseline, and numerical evidence for inspection. **Do not commit or push anything until the researcher explicitly approves.**
+**Phase D: review before upload.** Present the complete files, the diff against Cedar baseline, and numerical evidence for inspection. **Do not commit or push anything until the researcher explicitly approves.**
 
-## Copy-ready instructions for Claude Code
+## Copy-ready instructions for Maple
 
 ```text
-Read README_Week46_Attempt01_DRAFT.md and READER_GUIDE_Attempt02_CLAUDE_DRAFT.md, along with the current files in hitotoro24/PICART at weeks/2026-W45/ and weeks/2026-W46/chatgpt_baseline/.
+Read weeks/2026-W46/cedar_baseline/README.md and weeks/2026-W46/research_briefs/maple_diagnostics_preexecution_brief.md, along with the current files in hitotoro24/PICART at weeks/2026-W45/ and weeks/2026-W46/cedar_baseline/.
 
-Make an independent claude_diagnostics to reproduce PHD and the tree-derived Hessian on the 5,000-row OPFData subset for 2D and 3D. Explain the methods in plain professional research prose. The notebooks must be self-contained and executed with saved outputs, include docstrings for every function, show actual left/right CART child regions and numerical symmetry discrepancies, and clearly distinguish estimator disagreement from error to a true Hessian.
+Make an independent maple_diagnostics to reproduce PHD and the tree-derived Hessian on the 5,000-row OPFData subset for 2D and 3D. Explain the methods in plain professional research prose. The notebooks must be self-contained and executed with saved outputs, include docstrings for every function, show actual left/right CART child regions and numerical symmetry discrepancies, and clearly distinguish estimator disagreement from error to a true Hessian.
 
 Do not modify previous attempts, the data, or the manuscript. Do not push or commit anything. Present code, notebooks, a reader-facing README, an explicit change log, and verified results for review first.
 ```
 
-**Status:** Awaiting independent execution and approval. There are no Claude-generated findings to report in this document.
+**Status:** Awaiting independent execution and approval. There are no Maple-generated findings to report in this document.

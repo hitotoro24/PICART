@@ -1,4 +1,4 @@
-"""Uneven-split extension.  Source: docs/claude/hessian_derivation.tex
+"""Uneven-split extension.  Source: external derivation notes (hessian_derivation.tex)
 (Proposition "Effective center", eq. (master), Section "General dimension").
 Chosen by Tony on 2026-11-05 as the way to handle CART thresholds.
 

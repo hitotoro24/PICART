@@ -1,7 +1,7 @@
-"""Generate and execute the claude_diagnostics notebooks (2D and 3D).
+"""Generate and execute the maple_diagnostics notebooks (2D and 3D).
 
 Run from this directory:  python make_notebooks.py
-Produces claude_opfdata_hessian_2d.ipynb and claude_opfdata_hessian_3d.ipynb with
+Produces maple_opfdata_hessian_2d.ipynb and maple_opfdata_hessian_3d.ipynb with
 executed outputs.  The notebooks themselves only import hessian_tools.
 """
 import nbformat as nbf
@@ -220,7 +220,7 @@ display(u.tail(6))""")
 
     nb["cells"] = C
     nb.metadata["kernelspec"] = {"name": "python3", "display_name": "Python 3", "language": "python"}
-    fname = f"claude_opfdata_hessian_{d}d.ipynb"
+    fname = f"maple_opfdata_hessian_{d}d.ipynb"
     NotebookClient(nb, timeout=900, kernel_name="python3", resources={"metadata": {"path": "."}}).execute()
     nbf.write(nb, fname)
     return fname

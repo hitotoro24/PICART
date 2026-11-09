@@ -18,7 +18,7 @@ Q = [[4.0, 1.5, 0.5],      b = [-1, 2, 0.5],   c = 0.7
 | Item | Status |
 |---|---|
 | `docs/quadratic_hessian.ipynb` | 2D only; *point-evaluation* centred differences, not regional means. Reusable idea: the mixed entry from a directional stencil. Not reused directly. |
-| `hessian_derivation.tex (RAship export, docs/claude/)`, `hessian_2d.tex` | Claude-authored derivations (box-mean lemma, effective-centre proposition, uneven-split correction). Per the working agreement they are to be reproduced by Tony before use; this session used only the *even-split* special case they share with Tony's specification. |
+| `hessian_derivation.tex (RAship export, external derivation notes)`, `hessian_2d.tex` | Maple-authored derivations (box-mean lemma, effective-centre proposition, uneven-split correction). Per the working agreement they are to be reproduced by Tony before use; this session used only the *even-split* special case they share with Tony's specification. |
 | `tree_hessian/` named in `working_agreement.md` | Not in the repository export. Rebuilt here from scratch. |
 | Wycoff (2024) eq. 3 | `gamma_i = 2 (mu_r - mu_l) / (u - l)`; used verbatim as `stencils.gradient_estimate`. |
 | Python environment | No scikit-learn on the machine; created `.venv` (gitignored) with numpy 2.0.2, scikit-learn 1.6.1, pytest. |
@@ -183,7 +183,7 @@ which a real dataset would not supply.
    coincide with box midpoints. Options I did not choose between: (a) keep the
    construction and constrain the tree (e.g. a midpoint-split tree, or data on a
    grid so that candidate thresholds are cell boundaries); (b) extend the
-   construction to arbitrary thresholds. `hessian_derivation.tex (RAship export, docs/claude/)`
+   construction to arbitrary thresholds. `hessian_derivation.tex (RAship export, external derivation notes)`
    contains such an extension (effective centre `(l + tau + u)/3`; it predicts the
    3B mixed bias `2.667 (tau_T - tau_B)` exactly), but the working agreement lists
    it as not yet reproduced by you, so it was not used.
@@ -202,7 +202,7 @@ which a real dataset would not supply.
 
 ## 6. Extension to uneven splits (added later on 2026-11-05, at Tony's choice)
 
-Formulation used, taken from `hessian_derivation.tex (RAship export, docs/claude/)` (Proposition
+Formulation used, taken from `hessian_derivation.tex (RAship export, external derivation notes)` (Proposition
 "Effective center" and the "General dimension" section); eq. 3 is unchanged:
 
 * a node with extent `[l, u]` splitting `x_s` at `tau` carries
@@ -253,7 +253,7 @@ only.
 **Still open after this step.**
 
 1. The derivation this rests on (box-mean lemma, effective-centre proposition) is
-   Claude-authored and, per the working agreement, still to be reproduced by Tony.
+   Maple-authored and, per the working agreement, still to be reproduced by Tony.
    The tests `test_gamma_equals_partial_at_effective_center` and
    `test_half_instead_of_third_is_biased` are what a reproduction must agree with.
 2. Weighting of pairs: all pairs weighted equally. Cells with few points are
@@ -266,7 +266,7 @@ only.
 
 ## 5. Reviewer notes on existing material
 
-* `hessian_derivation.tex (RAship export, docs/claude/)`, line 113: the aligned-case cross stencil is
+* `hessian_derivation.tex (RAship export, external derivation notes)`, line 113: the aligned-case cross stencil is
   written with a factor 8; `hessian_2d.tex` (Remark "Even splits") and the code
   here give 4. The 4 is correct for `v_2 = (u_2 - l_2)/2` and
   `gamma = 2 Delta mu/(u_1 - l_1)`. Not edited.

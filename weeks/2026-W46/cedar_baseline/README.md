@@ -1,6 +1,6 @@
 # Estimating cost curvature from regression-tree splits
 
-**OPFData IEEE-118 | Week 46 | ChatGPT baseline comparison | 2D and 3D pilot**  
+**OPFData IEEE-118 | Week 46 | Cedar baseline comparison | 2D and 3D pilot**  
 **Status:** Preliminary analysis. This document and the associated notebooks are research artifacts, not a validated power-system sensitivity study.
 
 ## Research question
@@ -74,8 +74,8 @@ The functions are arranged in the notebook as follows:
 
 Open either of the two self-contained executed notebooks in Jupyter or VS Code:
 
-- [`chatgpt_opfdata_hessian_2d.ipynb`](https://github.com/hitotoro24/PICART/blob/main/weeks/2026-W46/chatgpt_baseline/chatgpt_opfdata_hessian_2d.ipynb)
-- [`chatgpt_opfdata_hessian_3d.ipynb`](https://github.com/hitotoro24/PICART/blob/main/weeks/2026-W46/chatgpt_baseline/chatgpt_opfdata_hessian_3d.ipynb)
+- [`cedar_opfdata_hessian_2d.ipynb`](https://github.com/hitotoro24/PICART/blob/main/weeks/2026-W46/cedar_baseline/cedar_opfdata_hessian_2d.ipynb)
+- [`cedar_opfdata_hessian_3d.ipynb`](https://github.com/hitotoro24/PICART/blob/main/weeks/2026-W46/cedar_baseline/cedar_opfdata_hessian_3d.ipynb)
 
 Requirements: Python, `numpy`, `pandas`, `matplotlib`, `scikit-learn`, Jupyter/IPython. The executed notebooks record Python 3.13.5, NumPy 2.3.5, and pandas 2.2.3; other package versions are not pinned in the notebooks.
 
@@ -172,12 +172,12 @@ No symmetrization is applied before calculating these gaps. Averaging $\widehat 
 5. **Numerical instability.** Full rank means the row-wise least-squares problems are identifiable, not necessarily well-estimated. Large off-diagonal discrepancies remain in the raw tree matrix.
 6. **Presentation gaps.** The saved figures display matrix values but do **not yet** show representative left/right CART child regions or empirical ranges of repeated PHD/CART estimates. Such ranges must be computed from a specified repetition procedure before being plotted; they must not be labeled confidence intervals by default.
 
-**Follow-up diagnostic, not part of this baseline:** Retain the OPFData predictor positions, generate responses from a known quadratic, and run the unchanged CART estimator. Since the quadratic's Hessian is then known, this would test whether the observed predictor distribution alone can cause reconstruction error. A related controlled experiment is now recorded separately in the Claude diagnostics study; it was **not performed in this baseline**.
+**Follow-up diagnostic, not part of this baseline:** Retain the OPFData predictor positions, generate responses from a known quadratic, and run the unchanged CART estimator. Since the quadratic's Hessian is then known, this would test whether the observed predictor distribution alone can cause reconstruction error. A related controlled experiment is now recorded separately in the Maple diagnostics study; it was **not performed in this baseline**.
 
 ## Naming and provenance
 
-This folder is the **ChatGPT baseline comparison**. It is not a numbered attempt or an accuracy ranking. For a separate independent replication with additional controlled tests and a larger minimum leaf size, see [Claude diagnostics](../claude_diagnostics/README.md). The notebooks preserve their saved results. The original `attempt_01` directory name remains traceable in Git history.
+This folder is the **Cedar baseline comparison**. It is not a numbered attempt or an accuracy ranking. For a separate independent replication with additional controlled tests and a larger minimum leaf size, see [Maple diagnostics](../maple_diagnostics/README.md). The notebooks preserve their saved results. The original `cedar_baseline` directory name remains traceable in Git history.
 
 ## Research status
 
-ChatGPT baseline establishes that both estimation pipelines can be executed on the small OPFData subset. It also reveals substantial disagreement between the methods and, independently, within the raw tree-derived matrix. These findings justify further validation; they do not establish that either estimator recovers true optimal-power-flow curvature. The conference manuscript has not been updated as part of this documentation.
+Cedar baseline establishes that both estimation pipelines can be executed on the small OPFData subset. It also reveals substantial disagreement between the methods and, independently, within the raw tree-derived matrix. These findings justify further validation; they do not establish that either estimator recovers true optimal-power-flow curvature. The conference manuscript has not been updated as part of this documentation.
