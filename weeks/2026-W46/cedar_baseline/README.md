@@ -16,6 +16,8 @@ Both [2D](cedar_opfdata_hessian_2d.ipynb) and [3D](cedar_opfdata_hessian_3d.ipyn
 
 **For a short meeting with Nathan:** Open [the minimal synthetic 2D quadratic notebook](cedar_colab_quadratic_2d.ipynb) in Colab. It contains two code cells and tests the same function on a quadratic with true Hessian `[[2,1],[1,4]]`; a local run returned `[[2.113,1.024],[1.024,4.269]]`, relative Frobenius error approximately **6.25%**. That error is against a *known synthetic Hessian*, unlike OPFData. To compare **both PHD and Algorithm 1** on the actual small CSV from mounted Google Drive, use [the optional 2D Colab companion](cedar_colab_opfdata_2d.ipynb).
 
+**Current GitHub rendering:** The Cedar dataset notebooks now show the actual 2D/3D matrices and rank diagnostics in Markdown tables **before** the executable cells; the plotting cell that appeared to cut off GitHub rendering has been removed. The notebooks retain the shared Algorithm 1 path and saved text outputs. The obsolete `hessian_comparison.py` has been removed from the active directory and remains accessible through Git history.
+
 **Status note:** The historical sections below refer to the **raw** unsymmetrized row estimates produced by earlier experiments. Their numerical values remain valuable as consistency diagnostics, but the reported Algorithm 1 estimate is now the symmetrized matrix. The earlier extensive notebook content is preserved in repository history; the current notebooks are concise and re-runnable. This revision does not modify Maple's independent study or the conference manuscript.
 
 ## Research question
@@ -100,7 +102,7 @@ The notebook currently expects the small CSV at:
 /Users/tonys/Desktop/Class/Decision Trees/datasets/118_ieee_smol.csv
 ```
 
-If working on another computer, change `CSV_PATH` in the first code cell. Run all cells from the top. Verify the printed observation count (5,000), tree depth, split count, row ranks, PHD matrix, raw CART matrix, and numerical symmetry table. The core numerical matrices are saved as text outputs; running the plotting cell generates fresh figures.
+If working on another computer, change `CSV_PATH` in the first code cell. Run all cells from the top. Verify the printed observation count (5,000), tree depth, split count, row ranks, PHD matrix, raw CART matrix, and numerical symmetry table. The core numerical matrices are visible immediately as Markdown tables and are also saved as execution text outputs. The previous plotting code is no longer part of these notebooks.
 
 The notebooks use **raw, unstandardized inputs**. Any future change of units or scaling must be recorded because Hessian entries depend on the units of both the inputs and the response.
 
@@ -166,7 +168,7 @@ These reported differences are **not errors relative to a true Hessian**. There 
 
 ## How to read the results
 
-The notebook displays the PHD and raw CART matrices, a table of opposing off-diagonal entries, and annotated matrix heatmaps. The heatmap numbers are shown in **millions of the original matrix-entry units** for legibility; the displayed matrix tables contain the original numerical values. These values should not be given physical units until the CSV extraction and cost convention are confirmed.
+The current notebook displays the final Algorithm 1 symmetrized Hessian, raw intermediate rows, and PHD matrix as Markdown tables and numerical text outputs. Historical heatmaps are accessible in the Git history, but are not part of the current concise notebooks. These values should not be given physical units until the CSV extraction and cost convention are confirmed.
 
 The symmetry diagnostic is **not** a Boolean test such as `H[i, j] == H[j, i]`. For every unique pair $(i,j)$ with $i<j$, it reports both estimates, their signed difference, and their absolute gap:
 
@@ -185,7 +187,7 @@ No symmetrization is applied before calculating these gaps. Averaging $\widehat 
 3. **Global versus local curvature.** The tree procedure fits one Hessian matrix across all observed nodes. Real optimal operating cost can have curvature that changes with loading conditions and active constraints.
 4. **PHD assumptions.** Residual-based PHD is not a known true Hessian. Classical interpretation depends on the predictor distribution and regularity assumptions.
 5. **Numerical instability.** Full rank means the row-wise least-squares problems are identifiable, not necessarily well-estimated. Large off-diagonal discrepancies remain in the raw tree matrix.
-6. **Presentation gaps.** The saved figures display matrix values but do **not yet** show representative left/right CART child regions or empirical ranges of repeated PHD/CART estimates. Such ranges must be computed from a specified repetition procedure before being plotted; they must not be labeled confidence intervals by default.
+6. **Presentation gaps.** The historical figures display matrix values but do **not** show representative left/right CART child regions or empirical ranges of repeated PHD/CART estimates. Such ranges must be computed from a specified repetition procedure before being plotted; they must not be labeled confidence intervals by default.
 
 **Follow-up diagnostic, not part of this baseline:** Retain the OPFData predictor positions, generate responses from a known quadratic, and run the unchanged CART estimator. Since the quadratic's Hessian is then known, this would test whether the observed predictor distribution alone can cause reconstruction error. A related controlled experiment is now recorded separately in the Maple diagnostics study; it was **not performed in this baseline**.
 

@@ -111,7 +111,7 @@ tree estimate can.
 
 ## 5. What the Cedar baseline establishes
 
-- Re-implemented the Step 1–4 pipeline inside one script (`hessian_comparison.py`) and implemented PHD.
+- Historically re-implemented the split-to-Hessian pipeline in a separate script. The active Cedar notebooks now import `cedar_baseline/algorithm1_tree_hessian.py`, and the obsolete script was removed from the current tree.
 - Fitted the tree at depth 7 with the default minimum leaf size of 1.
 - Reported the raw tree Hessian, the symmetry gap for each off-diagonal pair, and the largest difference to PHD.
 - Reported in the original units (cost per p.u.²), where numbers are in the hundreds of thousands to millions.
@@ -200,13 +200,13 @@ smaller error on top.
 
 ```
 weeks/2026-W45/tree_hessian/        the estimator (unchanged since Week 45)
-weeks/2026-W46/cedar_baseline/           first comparison: hessian_comparison.py + two notebooks
+weeks/2026-W46/cedar_baseline/           Algorithm 1 shared implementation + 2D/3D compact notebooks
 weeks/2026-W46/maple_diagnostics/           second comparison: hessian_tools.py, make_notebooks.py,
                                      maple_opfdata_hessian_2d.ipynb, maple_opfdata_hessian_3d.ipynb, README.md
 ```
 
 To re-run maple_diagnostics from scratch: open a terminal in `weeks/2026-W46/maple_diagnostics` and run `python make_notebooks.py`
-(needs `numpy pandas scikit-learn matplotlib nbformat nbclient`). To just read, open the `.ipynb` files; outputs
+(needs `numpy pandas scikit-learn matplotlib nbformat nbclient`). To just read, open the `.ipynb` files; saved tables and numerical outputs
 are saved in them.
 
 ## Naming and methodological clarification
