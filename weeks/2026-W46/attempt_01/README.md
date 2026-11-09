@@ -1,6 +1,6 @@
 # Estimating cost curvature from regression-tree splits
 
-**OPFData IEEE-118 | Week 46 | Attempt 01 | 2D and 3D pilot**  
+**OPFData IEEE-118 | Week 46 | Attempt 01 (ChatGPT) | 2D and 3D pilot**  
 **Status:** Preliminary analysis. This document and the associated notebooks are research artifacts, not a validated power-system sensitivity study.
 
 ## Research question
@@ -74,8 +74,8 @@ The functions are arranged in the notebook as follows:
 
 Open either of the two self-contained executed notebooks in Jupyter or VS Code:
 
-- [`opfdata_hessian_2d.ipynb`](https://github.com/hitotoro24/PICART/blob/main/weeks/2026-W46/attempt_01/opfdata_hessian_2d.ipynb)
-- [`opfdata_hessian_3d.ipynb`](https://github.com/hitotoro24/PICART/blob/main/weeks/2026-W46/attempt_01/opfdata_hessian_3d.ipynb)
+- [`chatgpt_opfdata_hessian_2d.ipynb`](https://github.com/hitotoro24/PICART/blob/main/weeks/2026-W46/attempt_01/chatgpt_opfdata_hessian_2d.ipynb)
+- [`chatgpt_opfdata_hessian_3d.ipynb`](https://github.com/hitotoro24/PICART/blob/main/weeks/2026-W46/attempt_01/chatgpt_opfdata_hessian_3d.ipynb)
 
 Requirements: Python, `numpy`, `pandas`, `matplotlib`, `scikit-learn`, Jupyter/IPython. The executed notebooks record Python 3.13.5, NumPy 2.3.5, and pandas 2.2.3; other package versions are not pinned in the notebooks.
 

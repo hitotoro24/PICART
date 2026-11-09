@@ -1,4 +1,4 @@
-# Week 46 — attempt_02: CART effective-centre Hessian vs. residual-based PHD, OPFData IEEE-118
+# Week 46 — Attempt 02 (Claude Code): CART effective-centre Hessian vs. residual-based PHD, OPFData IEEE-118
 
 Independent re-implementation and evaluation of the 2D and 3D comparison. The CART reconstruction is **the
 existing Week 45 method**, imported unchanged from `weeks/2026-W45/tree_hessian`; PHD is implemented here from
@@ -8,8 +8,8 @@ scratch. Nothing in Week 45, attempt_01, the CSV, or any manuscript file is modi
 
 | file | purpose |
 |---|---|
-| `ieee118_cart_phd_2d.ipynb` | 2D study (CSV columns 1–2), executed with outputs |
-| `ieee118_cart_phd_3d.ipynb` | 3D study (CSV columns 1–3), executed with outputs |
+| `claude_opfdata_hessian_2d.ipynb` | 2D study (CSV columns 1–2), executed with outputs |
+| `claude_opfdata_hessian_3d.ipynb` | 3D study (CSV columns 1–3), executed with outputs |
 | `hessian_tools.py` | all functions used by the notebooks; every function has a docstring (purpose, inputs, outputs) |
 | `make_notebooks.py` | regenerates and executes both notebooks (`python make_notebooks.py` from this directory) |
 

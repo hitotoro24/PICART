@@ -1,6 +1,6 @@
 # Week 46 reader's guide — what the OPFData Hessian notebooks do and how to read them
 
-This guide is for anyone opening `attempt_01/` or `attempt_02/` without wanting to read the code first. It explains
+This guide compares `attempt_01/` (ChatGPT) and `attempt_02/` (Claude Code), with filenames that distinguish the two executed notebook sets. It is for readers who do not want to read the code first. It explains
 the question, the data, the two estimators, the checks, and how to interpret every table. Code appears only where
 a few lines make the idea concrete.
 
@@ -202,7 +202,7 @@ smaller error on top.
 weeks/2026-W45/tree_hessian/        the estimator (unchanged since Week 45)
 weeks/2026-W46/attempt_01/           first comparison: hessian_comparison.py + two notebooks
 weeks/2026-W46/attempt_02/           second comparison: hessian_tools.py, make_notebooks.py,
-                                     ieee118_cart_phd_2d.ipynb, ieee118_cart_phd_3d.ipynb, README.md
+                                     claude_opfdata_hessian_2d.ipynb, claude_opfdata_hessian_3d.ipynb, README.md
 ```
 
 To re-run attempt_02 from scratch: open a terminal in `weeks/2026-W46/attempt_02` and run `python make_notebooks.py`

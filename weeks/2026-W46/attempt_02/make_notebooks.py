@@ -1,7 +1,7 @@
 """Generate and execute the attempt_02 notebooks (2D and 3D).
 
 Run from this directory:  python make_notebooks.py
-Produces ieee118_cart_phd_2d.ipynb and ieee118_cart_phd_3d.ipynb with
+Produces claude_opfdata_hessian_2d.ipynb and claude_opfdata_hessian_3d.ipynb with
 executed outputs.  The notebooks themselves only import hessian_tools.
 """
 import nbformat as nbf
@@ -220,7 +220,7 @@ display(u.tail(6))""")
 
     nb["cells"] = C
     nb.metadata["kernelspec"] = {"name": "python3", "display_name": "Python 3", "language": "python"}
-    fname = f"ieee118_cart_phd_{d}d.ipynb"
+    fname = f"claude_opfdata_hessian_{d}d.ipynb"
     NotebookClient(nb, timeout=900, kernel_name="python3", resources={"metadata": {"path": "."}}).execute()
     nbf.write(nb, fname)
     return fname

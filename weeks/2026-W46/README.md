@@ -2,9 +2,20 @@
 
 ## Sequence
 
-- **attempt_01**: 2D and 3D comparison of classical residual-based PHD against the existing CART effective-center reconstruction. The two `.ipynb` files are now **self-contained and executed**, with source code, numerical tables, row diagnostics, and embedded annotated plots. `hessian_comparison.py` is retained as a documented alternative shared implementation.
-- **attempt_02**: Reserved for an independently executed Claude Code review and implementation. Do not overwrite attempt_01 or fabricate results attributed to Claude.
+- **attempt_01 (ChatGPT)**: 2D and 3D comparison of classical residual-based PHD against the existing CART effective-center reconstruction. The two `.ipynb` files are now **self-contained and executed**, with source code, numerical tables, row diagnostics, and embedded annotated plots. `hessian_comparison.py` is retained as a documented alternative shared implementation.
+- **attempt_02 (Claude Code)**: Completed independent replication with a 50-sample minimum leaf setting and known-quadratic diagnostics. Its files and results remain separate from Attempt 01.
 - **attempt_03** and later: Subsequent experiments only after documenting the change, hypothesis, and results of previous attempts.
+
+## Choose the implementation
+
+| Attempt | 2D notebook | 3D notebook | Method guide |
+| --- | --- | --- | --- |
+| **01: ChatGPT** | [2D](attempt_01/chatgpt_opfdata_hessian_2d.ipynb) | [3D](attempt_01/chatgpt_opfdata_hessian_3d.ipynb) | [Research guide](attempt_01/README.md) |
+| **02: Claude Code** | [2D](attempt_02/claude_opfdata_hessian_2d.ipynb) | [3D](attempt_02/claude_opfdata_hessian_3d.ipynb) | [Research guide](attempt_02/README.md) |
+
+Both notebooks retain original saved numerical outputs. The names identify their implementation source without claiming that Codex ran either experiment.
+
+The November 9 merge reconciled concurrent GitHub changes. The Notion push workflow skips logging if required secrets are missing; a green status does not prove delivery.
 
 ## Current study
 
