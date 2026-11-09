@@ -102,7 +102,7 @@ The notebook currently expects the small CSV at:
 /Users/tonys/Desktop/Class/Decision Trees/datasets/118_ieee_smol.csv
 ```
 
-If working on another computer, change `CSV_PATH` in the first code cell. Run all cells from the top. Verify the printed observation count (5,000), tree depth, split count, row ranks, PHD matrix, raw CART matrix, and numerical symmetry table. The core numerical matrices are visible immediately as Markdown tables and are also saved as execution text outputs. The previous plotting code is no longer part of these notebooks.
+If working on another computer, change `CSV_PATH` in the first code cell. Run all cells from the top. Verify the printed observation count (5,000), tree depth, split count, row ranks, PHD matrix, raw CART matrix, and numerical symmetry table. The numerical matrices are saved as execution outputs, followed by three embedded historical diagnostic figures, a styled comparison table, and concluding research interpretation. The notebooks have four concise executable code cells.
 
 The notebooks use **raw, unstandardized inputs**. Any future change of units or scaling must be recorded because Hessian entries depend on the units of both the inputs and the response.
 

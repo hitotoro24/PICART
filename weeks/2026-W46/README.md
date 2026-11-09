@@ -28,7 +28,7 @@ The current Cedar code imports the **same shared Algorithm 1 function** in both 
 
 Use `/Users/tonys/Desktop/Class/Decision Trees/datasets/118_ieee_smol.csv` (5,000 rows). Only the small subset is used; the full 2 GB CSV is not required. The current CSV convention is target column 0, selected demand columns 1–2 in 2D or 1–3 in 3D. Physical column meanings and units require verification against the original data-extraction procedure.
 
-Open either notebook directly on GitHub to view its **saved matrices and rank diagnostics**, without running it. The plots were removed from the current concise notebooks because GitHub's preview appeared to stop at the plotting cell. To reproduce or change results, download or clone the repo and execute the notebook with Python/Jupyter, keeping the small CSV at the configured local path. Alternatively, run the shared implementation:
+Open either notebook directly on GitHub to view the saved 2D/3D matrices, full Algorithm 1 equations, and three embedded diagnostic figures without running it. The newer version also includes a formatted comparison table and a concluding Markdown interpretation after the plots. To reproduce or change results, download or clone the repo and execute the notebook with Python/Jupyter, keeping the small CSV at the configured local path. Alternatively, run the shared implementation:
 
 ```python
 from hessian_comparison import run
@@ -57,7 +57,7 @@ Before any claimed improvement, verify data provenance, test the estimator on OP
 
 ## Notebook rendering repair — Nov 9
 
-Historical note: the earliest GitHub notebook files were abbreviated six-cell wrappers with **zero saved outputs**. Therefore GitHub previews showed very little of the analysis. An intermediate version subsequently saved extensive executed outputs and plots. The current concise notebooks instead display results in Markdown tables and two short executable code cells, including a purpose/limitations narrative, documented function definitions, actual PHD and CART matrices, row-rank diagnostics, opposing off-diagonal entry tables, mean/median/maximum symmetry gaps, without requiring heatmap rendering. No estimator formulas, parameters, CSV values, or `.tex` files were modified as part of this rendering repair.
+Historical note: the earliest GitHub notebook files were abbreviated six-cell wrappers with **zero saved outputs**. Therefore GitHub previews showed very little of the analysis. An intermediate version subsequently saved extensive executed outputs and plots. The current version restores saved plots and formatted execution output blocks while keeping four concise code cells, including a purpose/limitations narrative, documented function definitions, actual PHD and CART matrices, row-rank diagnostics, opposing off-diagonal entry tables, mean/median/maximum symmetry gaps, with three saved heatmaps (PHD, raw CART, and asymmetry) plus a final interpretation. No estimator formulas, parameters, CSV values, or `.tex` files were modified as part of this rendering repair.
 
 **Still outstanding:** Figures illustrating the actual left/right CART child regions for representative split nodes, and a justified empirical range of estimates from each method. These are separate visualization enhancements and are **not** claimed as part of the current rendering repair.
 
