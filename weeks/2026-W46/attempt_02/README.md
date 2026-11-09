@@ -8,10 +8,10 @@ scratch. Nothing in Week 45, attempt_01, the CSV, or any manuscript file is modi
 
 | file | purpose |
 |---|---|
-| `opfdata_cart_vs_phd_2d.ipynb` | 2D study (CSV columns 1–2), executed with outputs |
-| `opfdata_cart_vs_phd_3d.ipynb` | 3D study (CSV columns 1–3), executed with outputs |
-| `opf_hessian_lib.py` | all functions used by the notebooks; every function has a docstring (purpose, inputs, outputs) |
-| `build_notebooks.py` | regenerates and executes both notebooks (`python build_notebooks.py` from this directory) |
+| `ieee118_cart_phd_2d.ipynb` | 2D study (CSV columns 1–2), executed with outputs |
+| `ieee118_cart_phd_3d.ipynb` | 3D study (CSV columns 1–3), executed with outputs |
+| `hessian_tools.py` | all functions used by the notebooks; every function has a docstring (purpose, inputs, outputs) |
+| `make_notebooks.py` | regenerates and executes both notebooks (`python make_notebooks.py` from this directory) |
 
 Run a notebook from this directory; it needs `numpy pandas scikit-learn matplotlib`. The CSV is read from
 `/Users/tonys/Desktop/Class/Decision Trees/datasets/118_ieee_smol.csv` (fallback: `118_ieee_smol.csv` in this

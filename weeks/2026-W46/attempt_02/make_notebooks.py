@@ -1,8 +1,8 @@
 """Generate and execute the attempt_02 notebooks (2D and 3D).
 
-Run from this directory:  python build_notebooks.py
-Produces opfdata_cart_vs_phd_2d.ipynb and opfdata_cart_vs_phd_3d.ipynb with
-executed outputs.  The notebooks themselves only import opf_hessian_lib.
+Run from this directory:  python make_notebooks.py
+Produces ieee118_cart_phd_2d.ipynb and ieee118_cart_phd_3d.ipynb with
+executed outputs.  The notebooks themselves only import hessian_tools.
 """
 import nbformat as nbf
 from nbclient import NotebookClient
@@ -53,7 +53,7 @@ the file is not modified and the full 2 GB dataset is not used.
     code("""import warnings; warnings.filterwarnings("ignore")
 import numpy as np, pandas as pd, matplotlib.pyplot as plt
 from IPython.display import display
-import opf_hessian_lib as L
+import hessian_tools as L
 pd.set_option("display.float_format", lambda v: f"{v:,.4f}" if abs(v) < 1e3 else f"{v:,.2f}")
 display(L.software_versions())""")
 
@@ -220,7 +220,7 @@ display(u.tail(6))""")
 
     nb["cells"] = C
     nb.metadata["kernelspec"] = {"name": "python3", "display_name": "Python 3", "language": "python"}
-    fname = f"opfdata_cart_vs_phd_{d}d.ipynb"
+    fname = f"ieee118_cart_phd_{d}d.ipynb"
     NotebookClient(nb, timeout=900, kernel_name="python3", resources={"metadata": {"path": "."}}).execute()
     nbf.write(nb, fname)
     return fname
