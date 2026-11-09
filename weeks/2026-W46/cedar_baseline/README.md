@@ -3,6 +3,21 @@
 **OPFData IEEE-118 | Week 46 | Cedar baseline comparison | 2D and 3D pilot**  
 **Status:** Preliminary analysis. This document and the associated notebooks are research artifacts, not a validated power-system sensitivity study.
 
+## Algorithm 1 implementation (current)
+
+The **final Cedar tree estimator** is in [`algorithm1_tree_hessian.py`](algorithm1_tree_hessian.py). It reads each fitted CART internal node's splitting variable, threshold, box bounds and child-node mean responses, then:
+
+1. Calculates the derivative contrast and quadratic effective location.
+2. Builds **all unordered pairs of distinct effective locations from nodes splitting the same variable** (vectorized with `np.triu_indices`).
+3. Returns **not identified** (`None`) if any axis has a pairwise design matrix of rank below `d`.
+4. Solves each row by least squares; returns `(raw + raw.T) / 2` as the **reported Algorithm 1 output** and retains `raw` for asymmetry diagnostics.
+
+Both [2D](cedar_opfdata_hessian_2d.ipynb) and [3D](cedar_opfdata_hessian_3d.ipynb) notebooks import this shared function. The implementation was checked on the 5,000-row OPFData subset and a known 2D quadratic. The underlying raw row estimates agree with the earlier centered-regression approach to rounding, but that earlier approach did **not** explicitly construct Algorithm 1's pairs or report the symmetrized final result.
+
+**For a short meeting with Nathan:** Open [the minimal synthetic 2D quadratic notebook](cedar_colab_quadratic_2d.ipynb) in Colab. It contains two code cells and tests the same function on a quadratic with true Hessian `[[2,1],[1,4]]`; a local run returned `[[2.113,1.024],[1.024,4.269]]`, relative Frobenius error approximately **6.25%**. That error is against a *known synthetic Hessian*, unlike OPFData. To compare **both PHD and Algorithm 1** on the actual small CSV from mounted Google Drive, use [the optional 2D Colab companion](cedar_colab_opfdata_2d.ipynb).
+
+**Status note:** The historical sections below refer to the **raw** unsymmetrized row estimates produced by earlier experiments. Their numerical values remain valuable as consistency diagnostics, but the reported Algorithm 1 estimate is now the symmetrized matrix. The earlier extensive notebook content is preserved in repository history; the current notebooks are concise and re-runnable. This revision does not modify Maple's independent study or the conference manuscript.
+
 ## Research question
 
 Can the mean-response differences at regression-tree splits be used to reconstruct second-order information about a regression function? On real optimal-power-flow data, how does the resulting matrix compare with a classical residual-based Principal Hessian Directions (PHD) estimate?
@@ -57,14 +72,14 @@ $$
 
 For an appropriate quadratic function with the required regional-averaging assumptions, the contrast equals the relevant partial derivative at $c$. Because a quadratic's gradient is linear, differences between contrasts at two nodes splitting on the same variable provide linear equations for one Hessian row. The notebook solves those equations by least squares and repeats the procedure for each variable.
 
-The functions are arranged in the notebook as follows:
+The following is the **historical** in-notebook function list. The current concise notebooks import the shared algorithm module:
 
 | Function | Input | Output | Role |
 | --- | --- | --- | --- |
 | `load_opfdata` | CSV path and selected column numbers | $X$, $y$, loaded path | Read the pilot data without changing its values. |
 | `estimate_phd` | $X$, $y$ | PHD matrix, covariance condition number | Calculate the comparison estimate from residuals. |
 | `collect_splits` | Fitted CART, assumed outer bounds | Internal split records | Retrieve split variable, threshold, region bounds, and child mean responses. |
-| `estimate_tree_hessian` | Split records, number of variables | Raw matrix, row diagnostics | Build and solve the derivative-contrast equations. |
+| `estimate_tree_hessian` | Fitted CART, predictor matrix | Symmetric matrix or `None`, raw rows, pair/rank diagnostics | Follow Algorithm 1 using all same-axis pairs. |
 | `off_diagonal_checks` | Raw estimated matrix | Pairwise table and summary | Measure differences between independently estimated opposing entries. |
 | `plot_hessian` | Matrix and title | Annotated figure | Display matrix values for inspection. |
 
@@ -85,7 +100,7 @@ The notebook currently expects the small CSV at:
 /Users/tonys/Desktop/Class/Decision Trees/datasets/118_ieee_smol.csv
 ```
 
-If working on another computer, change `CSV_PATH` in the first code cell. Run all cells from the top. Verify the printed observation count (5,000), tree depth, split count, row ranks, PHD matrix, raw CART matrix, and numerical symmetry table. Results already saved inside the notebook can be viewed on GitHub without running anything.
+If working on another computer, change `CSV_PATH` in the first code cell. Run all cells from the top. Verify the printed observation count (5,000), tree depth, split count, row ranks, PHD matrix, raw CART matrix, and numerical symmetry table. The core numerical matrices are saved as text outputs; running the plotting cell generates fresh figures.
 
 The notebooks use **raw, unstandardized inputs**. Any future change of units or scaling must be recorded because Hessian entries depend on the units of both the inputs and the response.
 

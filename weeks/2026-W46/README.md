@@ -2,7 +2,7 @@
 
 ## Studies and provenance
 
-- **Cedar baseline (`cedar_baseline/`)**: 2D and 3D comparison of classical residual-based PHD against the existing CART effective-center reconstruction. The two `.ipynb` files are now **self-contained and executed**, with source code, numerical tables, row diagnostics, and embedded annotated plots. `hessian_comparison.py` is retained as a documented alternative shared implementation.
+- **Cedar baseline (`cedar_baseline/`)**: 2D and 3D comparison of classical residual-based PHD against the existing CART effective-center reconstruction. The current concise notebooks import the shared `algorithm1_tree_hessian.py`, implement the exact all-pairs/rank/symmetrization steps, and retain the raw rows as diagnostics. `hessian_comparison.py` remains a historical alternative.
 - **Maple diagnostics (`maple_diagnostics/`)**: Completed independent replication with a 50-sample minimum leaf setting and known-quadratic diagnostics. Its files and results remain separate from the Cedar baseline.
 - **Future studies**: Name by actual research question and method, with a separate README documenting hypotheses, changes, reproducibility, and results. Do not add numbered `attempt_N` directories.
 
@@ -16,6 +16,13 @@
 The four notebooks retain their original saved numerical outputs and already have clear creator prefixes. The folder names indicate research purpose, **not a ranking of numerical accuracy**. An initial Cedar comparison and Maple's independent validation/diagnostics are different studies, not competing numbered attempts.
 
 The November 9 merge reconciled concurrent GitHub changes. The Notion push workflow skips logging if required secrets are missing; a green status does not prove delivery.
+
+## Minimal Colab experiment for Nathan
+
+- [Known 2D quadratic: Algorithm 1](cedar_baseline/cedar_colab_quadratic_2d.ipynb), with an analytically known Hessian; no data upload needed.
+- [Mounted Drive: 2D OPFData Algorithm 1 and residual PHD](cedar_baseline/cedar_colab_opfdata_2d.ipynb).
+
+The current Cedar code imports the **same shared Algorithm 1 function** in both the quadratic and OPFData runs. It forms all same-axis effective-location pairs, checks rank, solves rows by least squares, and reports their symmetrized matrix. Historical raw asymmetry measurements in this index describe the unsymmetrized intermediate, not the final Algorithm 1 matrix.
 
 ## Current study
 
