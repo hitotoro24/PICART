@@ -1,4 +1,4 @@
-"""Shared code for the attempt_02 notebooks: CART-derived Hessian (Week 45 method,
+"""Shared code for the claude_diagnostics notebooks: CART-derived Hessian (Week 45 method,
 unchanged) versus an independently implemented residual-based PHD estimator on
 the small OPFData IEEE-118 subset.
 
@@ -143,7 +143,7 @@ def cart_hessian_raw(nodes: dict, d: int):
 
 
 def centred_regression_rows(nodes: dict, d: int) -> np.ndarray:
-    """Alternative solve used by attempt_01: regress gamma on the effective
+    """Alternative solve used by chatgpt_baseline: regress gamma on the effective
     centres after subtracting means, one regression per axis.
 
     Inputs: node dict, d.  Output: d x d raw matrix (NaN where rank < d).

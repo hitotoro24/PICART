@@ -1,6 +1,6 @@
 # Week 46 reader's guide — what the OPFData Hessian notebooks do and how to read them
 
-This guide compares `attempt_01/` (ChatGPT) and `attempt_02/` (Claude Code), with filenames that distinguish the two executed notebook sets. It is for readers who do not want to read the code first. It explains
+This guide compares `chatgpt_baseline/` (initial ChatGPT comparison) and `claude_diagnostics/` (independent Claude diagnostic study), with filenames that distinguish the two executed notebook sets. It is for readers who do not want to read the code first. It explains
 the question, the data, the two estimators, the checks, and how to interpret every table. Code appears only where
 a few lines make the idea concrete.
 
@@ -109,7 +109,7 @@ tree estimate can.
 
 ---
 
-## 5. What attempt_01 did
+## 5. What the ChatGPT baseline establishes
 
 - Re-implemented the Step 1–4 pipeline inside one script (`hessian_comparison.py`) and implemented PHD.
 - Fitted the tree at depth 7 with the default minimum leaf size of 1.
@@ -118,18 +118,18 @@ tree estimate can.
 
 Headline numbers (2D): H[1,2] ≈ −0.73 million, H[2,1] ≈ −3.15 million — a gap of 2.4 million, i.e. the two
 estimates of the same entry disagree by more than three times the smaller one. In 3D the three pair gaps were 2.18,
-0.38 and 2.24 million. attempt_01 correctly concluded the raw reconstruction is severely inconsistent, and listed
+0.38 and 2.24 million. chatgpt_baseline correctly concluded the raw reconstruction is severely inconsistent, and listed
 possible causes (geometry, non-uniform predictors, the global-quadratic assumption, or code) without deciding.
 
 ---
 
-## 6. What attempt_02 did differently, and why
+## 6. What the Claude diagnostic study adds, and why
 
-**Same method, called directly.** Instead of re-implementing Steps 1–4, attempt_02 imports the Week 45 package and
-calls it. It checks numerically that the two implementations agree (they do, to 10⁻⁹), and reproduces attempt_01's
+**Same method, called directly.** Instead of re-implementing Steps 1–4, claude_diagnostics imports the Week 45 package and
+calls it. It checks numerically that the two implementations agree (they do, to 10⁻⁹), and reproduces chatgpt_baseline's
 numbers exactly at the same tree settings. So any disagreement between attempts is about interpretation, not code.
 
-**Two tree settings.** Setting A = attempt_01's (leaf size 1); setting B = leaf size 50. Bigger leaves mean each
+**Two tree settings.** Setting A = chatgpt_baseline's (leaf size 1); setting B = leaf size 50. Bigger leaves mean each
 average is computed from more rows and is therefore steadier.
 
 **PHD stated precisely.** The covariance uses 1/n, the residual comes from a fit with intercept and linear terms,
@@ -200,11 +200,15 @@ smaller error on top.
 
 ```
 weeks/2026-W45/tree_hessian/        the estimator (unchanged since Week 45)
-weeks/2026-W46/attempt_01/           first comparison: hessian_comparison.py + two notebooks
-weeks/2026-W46/attempt_02/           second comparison: hessian_tools.py, make_notebooks.py,
+weeks/2026-W46/chatgpt_baseline/           first comparison: hessian_comparison.py + two notebooks
+weeks/2026-W46/claude_diagnostics/           second comparison: hessian_tools.py, make_notebooks.py,
                                      claude_opfdata_hessian_2d.ipynb, claude_opfdata_hessian_3d.ipynb, README.md
 ```
 
-To re-run attempt_02 from scratch: open a terminal in `weeks/2026-W46/attempt_02` and run `python make_notebooks.py`
+To re-run claude_diagnostics from scratch: open a terminal in `weeks/2026-W46/claude_diagnostics` and run `python make_notebooks.py`
 (needs `numpy pandas scikit-learn matplotlib nbformat nbclient`). To just read, open the `.ipynb` files; outputs
 are saved in them.
+
+## Naming and methodological clarification
+
+The earlier directories `attempt_01` and `attempt_02` have been renamed to `chatgpt_baseline` and `claude_diagnostics`. This avoids implying that Claude's study supersedes the ChatGPT comparison or that a smaller raw symmetry gap establishes accuracy. Both remain separately documented in Git history. **Regional-mean caveat:** the effective location for a general quadratic follows from exact uniform averages over rectangular children. An empirical CART child-node mean response is different when observation locations are uneven within those regions, potentially changing the derivative-like contrast itself. This issue arises before the row-wise Hessian fit.

@@ -1,4 +1,4 @@
-"""Generate and execute the attempt_02 notebooks (2D and 3D).
+"""Generate and execute the claude_diagnostics notebooks (2D and 3D).
 
 Run from this directory:  python make_notebooks.py
 Produces claude_opfdata_hessian_2d.ipynb and claude_opfdata_hessian_3d.ipynb with
