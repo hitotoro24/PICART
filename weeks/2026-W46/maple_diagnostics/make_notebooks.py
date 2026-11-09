@@ -63,13 +63,26 @@ display(L.software_versions())""")
 All 5,000 observations are retained in their original units; nothing is standardised. Two tree settings are reported
 throughout: **A** `max_depth=7, min_samples_leaf=1` (scikit-learn's default leaf size, matching the Cedar baseline)
 and **B** `max_depth=7, min_samples_leaf=50`.""")
-    code("""D = @D@
-X, y, csv_path = L.load_opf(D)
-print("file:", csv_path)
-print("X shape:", X.shape, "| y shape:", y.shape)
-display(L.describe_inputs(X, y))
-print("predictor correlation matrix:")
-display(L.matrix_frame(np.corrcoef(X.T), "corr"))""")
+    code('''def load_and_describe(d):
+    """Read the response and the first d predictors; print shapes, summary statistics and correlations.
+
+    Args:
+        d: number of predictor columns (2 or 3).
+
+    Returns:
+        X (n, d), y (n,), and the CSV path that was read.
+    """
+    X, y, csv_path = L.load_opf(d)
+    print("file:", csv_path)
+    print("X shape:", X.shape, "| y shape:", y.shape)
+    display(L.describe_inputs(X, y))
+    print("predictor correlation matrix:")
+    display(L.matrix_frame(np.corrcoef(X.T), "corr"))
+    return X, y, csv_path
+
+
+D = @D@
+X, y, csv_path = load_and_describe(D)''')
 
     md(r"""## 2. The method in plain terms
 
@@ -123,16 +136,31 @@ a node mean over the rows in a child, so it is noisy; the method differences the
 The tree is fitted to the raw data. The table lists every internal node: split axis, extent along it, threshold
 $\tau$, the two child node means, the Step-1 slope $\gamma$ and the Step-2 location $z$ (columns `c_k`). The root box
 is the observed data range per axis.""")
-    code("""settings = {"A": dict(max_depth=7, min_samples_leaf=1), "B": dict(max_depth=7, min_samples_leaf=50)}
-trees, nodes, splits = {}, {}, {}
-for k, kw in settings.items():
-    trees[k] = L.fit_cart(X, y, **kw)
-    nodes[k] = L.nodes_from_cart(trees[k], X)
-    splits[k] = L.split_table(nodes[k])
-    print(f"setting {k}: {kw} -> {len(splits[k])} internal nodes, {int(trees[k].get_n_leaves())} leaves; "
-          + ", ".join(f"{s}: {(splits[k]['split axis']==s).sum()}" for s in sorted(splits[k]['split axis'].unique())))
+    code('''def fit_trees(X, y, settings):
+    """Fit one CART tree per setting and extract its internal splits.
+
+    Args:
+        X, y: predictors and response.
+        settings: dict name -> DecisionTreeRegressor keyword arguments.
+
+    Returns:
+        nodes: dict name -> node dictionary (boxes, thresholds, child node means).
+        splits: dict name -> per-node table (axis, extent, tau, node means, gamma, location z).
+    """
+    nodes, splits = {}, {}
+    for k, kw in settings.items():
+        tree = L.fit_cart(X, y, **kw)
+        nodes[k] = L.nodes_from_cart(tree, X)
+        splits[k] = L.split_table(nodes[k])
+        print(f"setting {k}: {kw} -> {len(splits[k])} internal nodes, {int(tree.get_n_leaves())} leaves; "
+              + ", ".join(f"{s}: {(splits[k]['split axis']==s).sum()}" for s in sorted(splits[k]['split axis'].unique())))
+    return nodes, splits
+
+
+settings = {"A": dict(max_depth=7, min_samples_leaf=1), "B": dict(max_depth=7, min_samples_leaf=50)}
+nodes, splits = fit_trees(X, y, settings)
 print("\\nsetting B, first rows of the split table:")
-display(splits["B"].head(12))""")
+display(splits["B"].head(12))''')
 
     md(r"""## 4. Algorithm 1: $\tilde Q$ before symmetrisation
 
@@ -143,18 +171,34 @@ $V_s$, condition number.
 
 Two cross-checks: the Week 45 solver (unordered pairs, same equations) and the Cedar centred-regression formulation
 must both reproduce $\tilde Q$ to rounding.""")
-    code("""Q_tilde, Q_hat, diag = {}, {}, {}
-for k in settings:
-    res = L.algorithm1_hessian(nodes[k], D)
-    Q_tilde[k], Q_hat[k], diag[k] = res["Q_tilde"], res["Q_hat"], res["diag"]
-    w45, _ = L.cart_hessian_raw(nodes[k], D)
-    alt = L.centred_regression_rows(nodes[k], D)
-    print(f"--- setting {k}: identified = {res['identified']} ---")
-    display(diag[k])
-    print("Q_tilde (before line 19, NOT symmetrised):")
-    display(L.matrix_frame(Q_tilde[k], f"Q_tilde {k}"))
-    print(f"max |Algorithm 1 - Week 45 solver| = {np.nanmax(np.abs(Q_tilde[k]-w45)):.2e} | "
-          f"max |Algorithm 1 - centred regression| = {np.nanmax(np.abs(Q_tilde[k]-alt)):.2e}\\n")""")
+    code('''def run_algorithm1(nodes, d):
+    """Run Algorithm 1 on every tree setting and cross-check it against two other formulations.
+
+    Args:
+        nodes: dict name -> node dictionary from fit_trees.
+        d: dimension.
+
+    Returns:
+        Q_tilde: dict name -> matrix before line 19 (not symmetrised).
+        Q_hat: dict name -> symmetrised output of line 19.
+        diag: dict name -> per-row rank/condition table.
+    """
+    Q_tilde, Q_hat, diag = {}, {}, {}
+    for k in nodes:
+        res = L.algorithm1_hessian(nodes[k], d)
+        Q_tilde[k], Q_hat[k], diag[k] = res["Q_tilde"], res["Q_hat"], res["diag"]
+        w45, _ = L.cart_hessian_raw(nodes[k], d)
+        alt = L.centred_regression_rows(nodes[k], d)
+        print(f"--- setting {k}: identified = {res['identified']} ---")
+        display(diag[k])
+        print("Q_tilde (before line 19, NOT symmetrised):")
+        display(L.matrix_frame(Q_tilde[k], f"Q_tilde {k}"))
+        print(f"max |Algorithm 1 - Week 45 solver| = {np.nanmax(np.abs(Q_tilde[k]-w45)):.2e} | "
+              f"max |Algorithm 1 - centred regression| = {np.nanmax(np.abs(Q_tilde[k]-alt)):.2e}\\n")
+    return Q_tilde, Q_hat, diag
+
+
+Q_tilde, Q_hat, diag = run_algorithm1(nodes, D)''')
 
     md(r"""## 5. PHD: curvature from residuals
 
@@ -170,36 +214,79 @@ in original units (cost per squared demand unit). Under a Gaussian input distrib
 Hessian of $E[y\mid x]$; the loads here are products of uniform factors and correlated, so PHD is a baseline with an
 assumption, not a reference. $M$ is symmetric by construction, so the reported asymmetry of $\hat H_{\mathrm{PHD}}$
 is at rounding level.""")
-    code("""H_phd, cond_sigma, asym_phd = L.phd_residual(X, y)
-print(f"condition number of Sigma: {cond_sigma:.2f} | Frobenius asymmetry of H_PHD: {asym_phd:.1e}")
-display(L.matrix_frame(H_phd, "PHD"))""")
+    code('''def run_phd(X, y):
+    """Compute the residual-based PHD estimate and print its diagnostics.
+
+    Args:
+        X, y: predictors and response in original units.
+
+    Returns:
+        H_phd: d by d matrix, Sigma^{-1} M Sigma^{-1}.
+    """
+    H_phd, cond_sigma, asym_phd = L.phd_residual(X, y)
+    print(f"condition number of Sigma: {cond_sigma:.2f} | Frobenius asymmetry of H_PHD: {asym_phd:.1e}")
+    display(L.matrix_frame(H_phd, "PHD"))
+    return H_phd
+
+
+H_phd = run_phd(X, y)''')
 
     md(r"""## 6. Estimates side by side (original units)""")
-    code("""for k in settings:
-    print(f"Algorithm 1, setting {k} — Q_tilde (before line 19):"); display(L.matrix_frame(Q_tilde[k], f"Q_tilde {k}"))
-    print(f"Algorithm 1, setting {k} — Q_hat (line 19 output):"); display(L.matrix_frame(Q_hat[k], f"Q_hat {k}"))
-print("PHD:"); display(L.matrix_frame(H_phd, "PHD"))""")
+    code('''def show_estimates(Q_tilde, Q_hat, H_phd):
+    """Print every estimate in original units: Q_tilde and Q_hat per setting, then PHD."""
+    for k in Q_tilde:
+        print(f"Algorithm 1, setting {k} — Q_tilde (before line 19):"); display(L.matrix_frame(Q_tilde[k], f"Q_tilde {k}"))
+        print(f"Algorithm 1, setting {k} — Q_hat (line 19 output):"); display(L.matrix_frame(Q_hat[k], f"Q_hat {k}"))
+    print("PHD:"); display(L.matrix_frame(H_phd, "PHD"))
+
+
+show_estimates(Q_tilde, Q_hat, H_phd)''')
 
     md(r"""## 7. Numerical symmetry check of $\tilde Q$
 
 For each distinct pair $i<j$: $\tilde Q_{ij}$ (from the row solved with Load-$i$ splits), $\tilde Q_{ji}$ (from Load-$j$
 splits), the signed gap, the absolute gap, and the gap relative to the larger of the two entries. The mean, median and
 maximum are summaries across the @NPAIRS@ — @PAIRS@ — not across observations. Nothing is symmetrised here.""")
-    code("""for k in settings:
-    pairs, summary = L.symmetry_pairs(Q_tilde[k])
-    print(f"--- setting {k} ---"); display(pairs); display(summary)""")
+    code('''def report_symmetry(Q_tilde):
+    """Show every distinct off-diagonal pair of Q_tilde and the mean/median/max absolute gap, per setting.
+
+    Args:
+        Q_tilde: dict name -> matrix before line 19.
+
+    Returns:
+        dict name -> (pairs table, summary table).
+    """
+    out = {}
+    for k in Q_tilde:
+        pairs, summary = L.symmetry_pairs(Q_tilde[k])
+        print(f"--- setting {k} ---"); display(pairs); display(summary)
+        out[k] = (pairs, summary)
+    return out
+
+
+symmetry = report_symmetry(Q_tilde)''')
 
     md(r"""## 8. Disagreement with PHD
 
 First $\tilde Q$ against PHD entry by entry; then $\hat Q=\tfrac12(\tilde Q+\tilde Q^\top)$ against PHD, reported only
 after the symmetry table so that line 19 is a visible step. Differences are between two estimates; no column is a
 truth value.""")
-    code("""for k in settings:
-    print(f"--- setting {k}: Q_tilde vs PHD ---")
-    display(L.comparison_table(Q_tilde[k], H_phd, f"Q_tilde {k}"))
-    asym = np.linalg.norm(Q_tilde[k] - Q_tilde[k].T) / np.linalg.norm(Q_tilde[k])
-    print(f"--- setting {k}: Q_hat vs PHD   (asymmetry of Q_tilde ||Q-Q^T||/||Q|| = {asym:.3f}) ---")
-    display(L.comparison_table(Q_hat[k], H_phd, f"Q_hat {k}"))""")
+    code('''def compare_with_phd(Q_tilde, Q_hat, H_phd):
+    """Entry-by-entry disagreement tables: Q_tilde vs PHD, then Q_hat vs PHD, per setting.
+
+    Args:
+        Q_tilde, Q_hat: dicts name -> matrix.
+        H_phd: PHD matrix.
+    """
+    for k in Q_tilde:
+        print(f"--- setting {k}: Q_tilde vs PHD ---")
+        display(L.comparison_table(Q_tilde[k], H_phd, f"Q_tilde {k}"))
+        asym = np.linalg.norm(Q_tilde[k] - Q_tilde[k].T) / np.linalg.norm(Q_tilde[k])
+        print(f"--- setting {k}: Q_hat vs PHD   (asymmetry of Q_tilde ||Q-Q^T||/||Q|| = {asym:.3f}) ---")
+        display(L.comparison_table(Q_hat[k], H_phd, f"Q_hat {k}"))
+
+
+compare_with_phd(Q_tilde, Q_hat, H_phd)''')
 
     md(r"""## 9. Figures
 
@@ -233,11 +320,16 @@ squared demand unit**. The $\tilde Q$ figures are intentionally not symmetrised.
     fig.tight_layout(); plt.show()
 
 
-plot_hessian(H_phd, "PHD estimated Hessian")
-for k in settings:
-    plot_hessian(Q_tilde[k], f"Algorithm 1, setting {k}: Q_tilde (raw rows)")
-    plot_hessian(np.abs(Q_tilde[k] - Q_tilde[k].T), f"Setting {k}: symmetry discrepancy |Q_tilde - Q_tilde^T|", absolute=True)
-    plot_hessian(np.abs(Q_hat[k] - H_phd), f"Setting {k}: |Q_hat - PHD| (disagreement, not error)", absolute=True)''')
+def plot_all(Q_tilde, Q_hat, H_phd):
+    """Plot PHD, then for each setting: Q_tilde, its symmetry discrepancy, and |Q_hat - PHD|."""
+    plot_hessian(H_phd, "PHD estimated Hessian")
+    for k in Q_tilde:
+        plot_hessian(Q_tilde[k], f"Algorithm 1, setting {k}: Q_tilde (raw rows)")
+        plot_hessian(np.abs(Q_tilde[k] - Q_tilde[k].T), f"Setting {k}: symmetry discrepancy |Q_tilde - Q_tilde^T|", absolute=True)
+        plot_hessian(np.abs(Q_hat[k] - H_phd), f"Setting {k}: |Q_hat - PHD| (disagreement, not error)", absolute=True)
+
+
+plot_all(Q_tilde, Q_hat, H_phd)''')
 
     md(r"""## 10. Controlled check on the same partitions: where does the inconsistency come from?
 
@@ -253,27 +345,52 @@ evaluated three ways and reconstructed with the same code:
 
 Errors are $\max|\tilde Q-Q|/\max|Q|$. The final table reports, per internal node, how far the real rows' centroid
 sits from the box centre relative to the box width (0 under the uniform assumption).""")
-    code("""rows = []
-for k in settings:
-    for seed in (0, 1, 2):
-        c = L.known_quadratic_check(nodes[k], X, D, seed)
-        scale = np.max(np.abs(c["Q_true"]))
-        rows.append({"setting": k, "seed": seed,
-                     "(a) exact box means": np.nanmax(np.abs(c["exact_box_means"] - c["Q_true"])) / scale,
-                     "(b) node means, real rows": np.nanmax(np.abs(c["sample_means"] - c["Q_true"])) / scale,
-                     "(c) uniform resample": np.nanmax(np.abs(c["uniform_resample"] - c["Q_true"])) / scale,
-                     "ranks (a/b/c)": f"{c['rank_exact']}/{c['rank_sample']}/{c['rank_uniform']}"})
-ctrl = pd.DataFrame(rows)
+    code('''def controlled_check(nodes, X, d, seeds=(0, 1, 2)):
+    """Run the known-quadratic check (a)/(b)/(c) on every setting and seed.
+
+    Args:
+        nodes: dict name -> node dictionary.
+        X: predictors (used for the real-row node means and the per-box counts).
+        d: dimension.
+        seeds: random seeds for the known Hessian.
+
+    Returns:
+        DataFrame, one row per (setting, seed): relative max error of each version and the ranks.
+    """
+    rows = []
+    for k in nodes:
+        for seed in seeds:
+            c = L.known_quadratic_check(nodes[k], X, d, seed)
+            scale = np.max(np.abs(c["Q_true"]))
+            rows.append({"setting": k, "seed": seed,
+                         "(a) exact box means": np.nanmax(np.abs(c["exact_box_means"] - c["Q_true"])) / scale,
+                         "(b) node means, real rows": np.nanmax(np.abs(c["sample_means"] - c["Q_true"])) / scale,
+                         "(c) uniform resample": np.nanmax(np.abs(c["uniform_resample"] - c["Q_true"])) / scale,
+                         "ranks (a/b/c)": f"{c['rank_exact']}/{c['rank_sample']}/{c['rank_uniform']}"})
+    return pd.DataFrame(rows)
+
+
+def show_one_check(nodes, X, d, setting="B", seed=0):
+    """Print the known Q and its three reconstructions for one setting and seed."""
+    c = L.known_quadratic_check(nodes[setting], X, d, seed)
+    print(f"setting {setting}, seed {seed} — known Q:"); display(L.matrix_frame(c["Q_true"], "Q true"))
+    print("(a) exact box means:"); display(L.matrix_frame(c["exact_box_means"], "(a)"))
+    print("(b) node means at the real rows:"); display(L.matrix_frame(c["sample_means"], "(b)"))
+    print("(c) uniform resample:"); display(L.matrix_frame(c["uniform_resample"], "(c)"))
+
+
+ctrl = controlled_check(nodes, X, D)
 with pd.option_context("display.float_format", lambda v: f"{v:.2e}" if v < 1e-6 else f"{v:.2f}"):
     display(ctrl)
-c = L.known_quadratic_check(nodes["B"], X, D, 0)
-print("setting B, seed 0 — known Q:"); display(L.matrix_frame(c["Q_true"], "Q true"))
-print("(a) exact box means:"); display(L.matrix_frame(c["exact_box_means"], "(a)"))
-print("(b) node means at the real rows:"); display(L.matrix_frame(c["sample_means"], "(b)"))
-print("(c) uniform resample:"); display(L.matrix_frame(c["uniform_resample"], "(c)"))""")
-    code("""u = L.within_cell_uniformity(nodes["B"], X)
-print("setting B: |row centroid − box centroid| / box width per axis; last row = mean over internal nodes")
-display(u.tail(6))""")
+show_one_check(nodes, X, D)''')
+    code('''def show_within_box_offsets(nodes, X, setting="B", tail=6):
+    """Print the last rows of the per-node centroid-offset table (last row = mean over nodes)."""
+    u = L.within_cell_uniformity(nodes[setting], X)
+    print(f"setting {setting}: |row centroid − box centroid| / box width per axis; last row = mean over internal nodes")
+    display(u.tail(tail))
+
+
+show_within_box_offsets(nodes, X)''')
 
     md(r"""## 11. Findings and limitations
 
