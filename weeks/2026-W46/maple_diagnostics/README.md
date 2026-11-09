@@ -48,9 +48,9 @@ identities per column are not established.
 | tree settings | `max_depth=7`, default `min_samples_leaf=1` only | setting **A** (same as cedar_baseline, for comparability) and setting **B** `min_samples_leaf=50`, side by side |
 | first-derivative step | computed inside `cart_hessian` | tabulated per node: extent, τ, child means, γ, effective centre |
 | PHD | Σ⁻¹MΣ⁻¹ then symmetrised | same estimator, conventions stated (1/n covariance, OLS residual on intercept + linear terms), returned unsymmetrised with its rounding asymmetry reported (~1e-16) |
-| symmetry report | pairs, mean/median/max abs gap | same, plus gap relative to the larger entry; the 2D case is stated to have one pair and the 3D case three |
+| symmetry report | pairs, mean/median/max abs gap | same, plus gap relative to the larger entry; the 2D case is stated to have one pair and the 3D case three; all math in the notebooks is LaTeX and figures follow the Cedar `plot_hessian` style |
 | PHD comparison | max abs difference | full entry-by-entry table for raw CART, and separately for ½(H+Hᵀ) labelled as a derived step |
-| diagnosis | none | §8 controlled check on the fitted partitions with a known quadratic: (a) exact box means, (b) empirical node mean responses at the real rows, (c) uniform resample with matched counts; plus within-cell centroid offsets |
+| diagnosis | none | §10 controlled check on the fitted partitions with a known quadratic: (a) exact box means, (b) empirical node mean responses at the real rows, (c) uniform resample with matched counts; plus within-cell centroid offsets |
 | notebook outputs | committed without executed outputs | executed end to end; software versions, shapes, ranks, raw values and tables stored |
 
 ## Results on the 5,000-row subset
