@@ -28,15 +28,9 @@ The current Cedar code imports the **same shared Algorithm 1 function** in both 
 
 Use `/Users/tonys/Desktop/Class/Decision Trees/datasets/118_ieee_smol.csv` (5,000 rows). Only the small subset is used; the full 2 GB CSV is not required. The current CSV convention is target column 0, selected demand columns 1–2 in 2D or 1–3 in 3D. Physical column meanings and units require verification against the original data-extraction procedure.
 
-Open either notebook directly on GitHub to view the saved 2D/3D matrices, full Algorithm 1 equations, and three embedded diagnostic figures without running it. The newer version also includes a formatted comparison table and a concluding Markdown interpretation after the plots. To reproduce or change results, download or clone the repo and execute the notebook with Python/Jupyter, keeping the small CSV at the configured local path. Alternatively, run the shared implementation:
+Open either notebook directly on GitHub to view the saved 2D/3D matrices, full Algorithm 1 equations, and three embedded diagnostic figures without running it. The newer version also includes a formatted comparison table and a concluding Markdown interpretation after the plots. To reproduce or change results, download or clone the repo and execute the notebook with Python/Jupyter, keeping the small CSV at the configured local path. For a data-free starting point, open [`cedar_baseline/cedar_colab_quadratic_2d.ipynb`](cedar_baseline/cedar_colab_quadratic_2d.ipynb), which calls the existing `cedar_baseline/algorithm1_tree_hessian.py` implementation. For the OPFData comparison, run the [Cedar 2D or 3D notebook](cedar_baseline/README.md) from its directory after supplying the external CSV and editing the documented local path. The historical `hessian_comparison.py` entry point has been removed and **cannot** be imported from the current checkout.
 
-```python
-from hessian_comparison import run
-run(2)
-run(3)
-```
-
-Install `numpy pandas matplotlib scikit-learn ipython` as needed.
+Install `numpy pandas matplotlib scikit-learn ipython` and a Jupyter environment as needed. Code and dependency versions are not fully pinned; saved output is historical evidence, not a guarantee of identical results on all environments.
 
 ## Scientific scope
 
